@@ -40,7 +40,7 @@ sudo apt-get install librocksdb-dev
 ##### Building
 
 - `git clone -b master https://github.com/plenteum/plenteum-testnet`
-- `cd plenteum`
+- `cd plenteum-testnet`
 - `mkdir build && cd $_`
 - `cmake ..`
 - `make`
@@ -59,7 +59,7 @@ If you're receiving a permission denied error running `cmake ..` on ubuntu, then
 ##### Building
 
 - `git clone -b master https://github.com/plenteum/plenteum-testnet`
-- `cd plenteum`
+- `cd plenteum-testnet`
 - `mkdir build && cd $_`
 - `cmake ..` or `cmake -DBOOST_ROOT=<path_to_boost_install> ..` when building
   from a specific boost install. If you used brew to install boost, your path is most likely `/usr/local/include/boost.`
