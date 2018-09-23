@@ -64,7 +64,7 @@ Plenteumd --print-genesis-tx --genesis-block-reward-address <TODO: replace walle
 * You should see your premine appear in the previously generated wallet.
 
 */
-const char     GENESIS_COINBASE_TX_HEX[]                     = "011401ff00018080d5d58c8fa15d02ddc71d701f70742b9712369ae9cfdf8500ba1a5ba5740d08823089cfb871324e210109870c85929f4a8378d2762018b6fdc1963a0381f0663549b92d89bfc2edf7c1";
+const char     GENESIS_COINBASE_TX_HEX[]                     = "011401ff00018080d5d58c8fa15d02433fc4e84cf2b3bb5b3ae1424bdd674b444effa258c30e9ad706bd7e43dca4e6210109e0791dafa84a1754f05781f570eb99c0262035a47e3aac1a91a3b1c8743950";
 
 const size_t   CRYPTONOTE_REWARD_BLOCKS_WINDOW               = 100;
 const size_t   CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE     = 10000; //size of block (bytes) after which reward for block calculated using block size
