@@ -63,7 +63,6 @@ public:
 
   uint64_t minimumFee() const { return m_mininumFee; }
   uint64_t defaultDustThreshold(uint32_t height) const {
-    return CryptoNote::parameters::DEFAULT_DUST_THRESHOLD;
   }
   uint64_t defaultFusionDustThreshold(uint32_t height) const {
       return CryptoNote::parameters::DEFAULT_DUST_THRESHOLD;
