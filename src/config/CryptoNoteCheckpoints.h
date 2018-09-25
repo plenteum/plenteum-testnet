@@ -21,12 +21,12 @@
 #include <initializer_list>
 
 namespace CryptoNote {
-struct CheckpointData {
-  uint32_t index;
-  const char* blockId;
-};
+	struct CheckpointData {
+		uint32_t index;
+		const char* blockId;
+	};
 
-const std::initializer_list<CheckpointData> CHECKPOINTS = {  
-
-};
+	const std::initializer_list<CheckpointData> CHECKPOINTS = {
+		{0, "def6579fd30ecefe35402936a9eb2689c3004921ce6baf03953a1bf54cdfc89b"}
+	};
 }
