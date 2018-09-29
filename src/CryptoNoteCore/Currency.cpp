@@ -722,7 +722,7 @@ zawyDifficultyBlockVersion(parameters::ZAWY_DIFFICULTY_DIFFICULTY_BLOCK_VERSION)
   minerTxBlobReservedSize(parameters::CRYPTONOTE_COINBASE_BLOB_RESERVED_SIZE);
 
   numberOfDisplayDecimalPlaces(parameters::CRYPTONOTE_DISPLAY_DECIMAL_POINT);
-  numberOfDecimalPlaces(parameters::CRYPTONOTE_DISPLAY_DECIMAL_POINT);
+  numberOfDecimalPlaces(parameters::CRYPTONOTE_DUST_DECIMAL_POINT);
 
   mininumFee(parameters::MINIMUM_FEE);
   defaultDustThreshold(parameters::DEFAULT_DUST_THRESHOLD);
