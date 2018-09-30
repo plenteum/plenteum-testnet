@@ -2347,7 +2347,7 @@ namespace CryptoNote {
 
 		//DL-TODO: extract DUST and place in tx Extra 
 		uint64_t dustFundContribution = 0;
-		uint16_t dustFundLimit = 1000000; //DL-TODO: Update limit to use params (les than 0.01)
+		uint64_t dustFundLimit = 1000000; //DL-TODO: Update limit to use params (les than 0.01)
 
 		typedef std::pair<const AccountPublicAddress*, uint64_t> AmountToAddress;
 		std::vector<AmountToAddress> amountsToAddresses;
