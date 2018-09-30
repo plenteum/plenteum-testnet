@@ -39,6 +39,7 @@ bool parseTransactionExtra(const std::vector<uint8_t> &transactionExtra, std::ve
   bool seen_tx_extra_tag_pubkey = false;
   bool seen_tx_extra_nonce = false;
   bool seen_tx_extra_merge_mining_tag = false;
+  bool seen_tx_extra_tag_dustamt = false;
 
   try {
     MemoryInputStream iss(transactionExtra.data(), transactionExtra.size());
@@ -71,18 +72,18 @@ bool parseTransactionExtra(const std::vector<uint8_t> &transactionExtra, std::ve
         break;
       }
 
-      case TX_EXTRA_TAG_PUBKEY: {
-        if (seen_tx_extra_tag_pubkey) {
-            return true;
-        }
+	  case TX_EXTRA_TAG_PUBKEY: {
+		  if (seen_tx_extra_tag_pubkey) {
+			  return true;
+		  }
 
-        seen_tx_extra_tag_pubkey = true;
+		  seen_tx_extra_tag_pubkey = true;
 
-        TransactionExtraPublicKey extraPk;
-        ar(extraPk.publicKey, "public_key");
-        transactionExtraFields.push_back(extraPk);
-        break;
-      }
+		  TransactionExtraPublicKey extraPk;
+		  ar(extraPk.publicKey, "public_key");
+		  transactionExtraFields.push_back(extraPk);
+		  break;
+	  }
 
       case TX_EXTRA_NONCE: {
         if (seen_tx_extra_nonce) {
@@ -102,18 +103,31 @@ bool parseTransactionExtra(const std::vector<uint8_t> &transactionExtra, std::ve
         break;
       }
 
-      case TX_EXTRA_MERGE_MINING_TAG: {
-        if (seen_tx_extra_merge_mining_tag) {
-            break;
-        }
+	  case TX_EXTRA_MERGE_MINING_TAG: {
+		  if (seen_tx_extra_merge_mining_tag) {
+			  break;
+		  }
 
-        seen_tx_extra_merge_mining_tag = true;
+		  seen_tx_extra_merge_mining_tag = true;
 
-        TransactionExtraMergeMiningTag mmTag;
-        ar(mmTag, "mm_tag");
-        transactionExtraFields.push_back(mmTag);
-        break;
-      }
+		  TransactionExtraMergeMiningTag mmTag;
+		  ar(mmTag, "mm_tag");
+		  transactionExtraFields.push_back(mmTag);
+		  break;
+	  }
+
+	  case TX_EXTRA_TAG_DUST_AMOUNT: {
+		  if (seen_tx_extra_tag_dustamt) {
+			  return true;
+		  }
+
+		  seen_tx_extra_tag_dustamt = true;
+
+		  TransactionExtraDustAmount extraDustAmount;
+		  ar(extraDustAmount.amount, "dust_amount");
+		  transactionExtraFields.push_back(extraDustAmount);
+		  break;
+	  }
       }
     }
   } catch (std::exception &) {
@@ -146,7 +160,11 @@ struct ExtraSerializerVisitor : public boost::static_visitor<bool> {
   }
 
   bool operator()(const TransactionExtraMergeMiningTag& t) {
-    return appendMergeMiningTagToExtra(extra, t);
+	  return appendMergeMiningTagToExtra(extra, t);
+  }
+
+  bool operator()(const TransactionExtraDustAmount& t) {
+	  return appendDustAmountTagToExtra(extra, t);
   }
 };
 
@@ -211,14 +229,21 @@ bool addExtraNonceToTransactionExtra(std::vector<uint8_t>& tx_extra, const Binar
 }
 
 bool appendMergeMiningTagToExtra(std::vector<uint8_t>& tx_extra, const TransactionExtraMergeMiningTag& mm_tag) {
-  BinaryArray blob;
-  if (!toBinaryArray(mm_tag, blob)) {
-    return false;
-  }
+	BinaryArray blob;
+	if (!toBinaryArray(mm_tag, blob)) {
+		return false;
+	}
 
-  tx_extra.push_back(TX_EXTRA_MERGE_MINING_TAG);
-  std::copy(reinterpret_cast<const uint8_t*>(blob.data()), reinterpret_cast<const uint8_t*>(blob.data() + blob.size()), std::back_inserter(tx_extra));
-  return true;
+	tx_extra.push_back(TX_EXTRA_MERGE_MINING_TAG);
+	std::copy(reinterpret_cast<const uint8_t*>(blob.data()), reinterpret_cast<const uint8_t*>(blob.data() + blob.size()), std::back_inserter(tx_extra));
+	return true;
+}
+
+bool appendDustAmountTagToExtra(std::vector<uint8_t>& tx_extra, const TransactionExtraDustAmount& dustAmount) {
+	tx_extra.resize(tx_extra.size() + 1 + sizeof(TransactionExtraDustAmount));
+	tx_extra[tx_extra.size() - 1 - sizeof(TransactionExtraDustAmount)] = TX_EXTRA_TAG_DUST_AMOUNT;
+	*reinterpret_cast<TransactionExtraDustAmount*>(&tx_extra[tx_extra.size() - sizeof(TransactionExtraDustAmount)]) = dustAmount;
+	return true;
 }
 
 bool getMergeMiningTagFromExtra(const std::vector<uint8_t>& tx_extra, TransactionExtraMergeMiningTag& mm_tag) {

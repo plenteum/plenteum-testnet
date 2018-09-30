@@ -29,6 +29,7 @@
 #define TX_EXTRA_TAG_PUBKEY                 0x01
 #define TX_EXTRA_NONCE                      0x02
 #define TX_EXTRA_MERGE_MINING_TAG           0x03
+#define TX_EXTRA_TAG_DUST_AMOUNT			0x04
 
 #define TX_EXTRA_NONCE_PAYMENT_ID           0x00
 
@@ -42,10 +43,6 @@ struct TransactionExtraPublicKey {
 	Crypto::PublicKey publicKey;
 };
 
-struct TransactionExtraDustAmount {
-	uint64_t amount;
-};
-
 struct TransactionExtraNonce {
   std::vector<uint8_t> nonce;
 };
@@ -53,6 +50,10 @@ struct TransactionExtraNonce {
 struct TransactionExtraMergeMiningTag {
   size_t depth;
   Crypto::Hash merkleRoot;
+};
+
+struct TransactionExtraDustAmount {
+	uint64_t amount;
 };
 
 // tx_extra_field format, except tx_extra_padding and tx_extra_pub_key:
@@ -85,6 +86,7 @@ bool addExtraNonceToTransactionExtra(std::vector<uint8_t>& tx_extra, const Binar
 void setPaymentIdToTransactionExtraNonce(BinaryArray& extra_nonce, const Crypto::Hash& payment_id);
 bool getPaymentIdFromTransactionExtraNonce(const BinaryArray& extra_nonce, Crypto::Hash& payment_id);
 bool appendMergeMiningTagToExtra(std::vector<uint8_t>& tx_extra, const TransactionExtraMergeMiningTag& mm_tag);
+bool appendDustAmountTagToExtra(std::vector<uint8_t>& tx_extra, const TransactionExtraDustAmount& dustAmount);
 bool getMergeMiningTagFromExtra(const std::vector<uint8_t>& tx_extra, TransactionExtraMergeMiningTag& mm_tag);
 
 bool createTxExtraWithPaymentId(const std::string& paymentIdString, std::vector<uint8_t>& extra);
