@@ -605,7 +605,8 @@ Crypto::Hash DatabaseBlockchainCache::pushBlockToAnotherCache(IBlockchainCache& 
                     transactions,
                     pushedBlockInfo.validatorState,
                     pushedBlockInfo.blockSize,
-                    pushedBlockInfo.generatedCoins,
+	  pushedBlockInfo.generatedCoins,
+	  pushedBlockInfo.dustFundAmount,
                     pushedBlockInfo.blockDifficulty,
                     std::move(pushedBlockInfo.rawBlock));
 
@@ -867,20 +868,24 @@ void DatabaseBlockchainCache::insertBlockTimestamp(BlockchainWriteBatch& batch, 
 void DatabaseBlockchainCache::pushBlock(const CachedBlock& cachedBlock,
                                         const std::vector<CachedTransaction>& cachedTransactions,
                                         const TransactionValidatorState& validatorState, size_t blockSize,
-                                        uint64_t generatedCoins, uint64_t blockDifficulty, RawBlock&& rawBlock) {
+                                        uint64_t generatedCoins, uint64_t dustFundAmount, uint64_t blockDifficulty, RawBlock&& rawBlock) {
   BlockchainWriteBatch batch;
   logger(Logging::DEBUGGING) << "push block with hash " << cachedBlock.getBlockHash() << ", and "
                              << cachedTransactions.size() + 1 << " transactions"; //+1 for base transaction
 
-  // TODO: cache top block difficulty, size, timestamp, coins; use it here
+  // TODO: cache top block difficulty, size, timestamp, coins, dustFundBalance; use it here
   auto lastBlockInfo = getCachedBlockInfo(getTopBlockIndex());
   auto cumulativeDifficulty = lastBlockInfo.cumulativeDifficulty + blockDifficulty;
   auto alreadyGeneratedCoins = lastBlockInfo.alreadyGeneratedCoins + generatedCoins;
+  //DL-TODO: Checkk if this is where we should have gotten dust from TX's rather than pass in dustFundAmount
+  auto dustFundBalance = lastBlockInfo.dustFundBalance + dustFundAmount;
   auto alreadyGeneratedTransactions = lastBlockInfo.alreadyGeneratedTransactions + cachedTransactions.size() + 1;
 
   CachedBlockInfo blockInfo;
   blockInfo.blockHash = cachedBlock.getBlockHash();
   blockInfo.alreadyGeneratedCoins = alreadyGeneratedCoins;
+  blockInfo.dustFundAmount = dustFundAmount;
+  blockInfo.dustFundBalance = dustFundBalance;
   blockInfo.alreadyGeneratedTransactions = alreadyGeneratedTransactions;
   blockInfo.cumulativeDifficulty = cumulativeDifficulty;
   blockInfo.blockSize = static_cast<uint32_t>(blockSize);
@@ -1159,7 +1164,21 @@ uint64_t DatabaseBlockchainCache::getAlreadyGeneratedCoins() const {
 }
 
 uint64_t DatabaseBlockchainCache::getAlreadyGeneratedCoins(uint32_t blockIndex) const {
-  return getCachedBlockInfo(blockIndex).alreadyGeneratedCoins;
+	return getCachedBlockInfo(blockIndex).alreadyGeneratedCoins;
+}
+
+uint64_t DatabaseBlockchainCache::getDustFundAmount() const {
+	return getDustFundAmount(getTopBlockIndex());
+}
+uint64_t DatabaseBlockchainCache::getDustFundAmount(uint32_t blockIndex) const {
+	return getCachedBlockInfo(blockIndex).dustFundAmount;
+}
+
+uint64_t DatabaseBlockchainCache::getDustFundBalance() const {
+	return getDustFundBalance(getTopBlockIndex());
+}
+uint64_t DatabaseBlockchainCache::getDustFundBalance(uint32_t blockIndex) const {
+	return getCachedBlockInfo(blockIndex).dustFundBalance;
 }
 
 uint64_t DatabaseBlockchainCache::getAlreadyGeneratedTransactions(uint32_t blockIndex) const {
@@ -1630,6 +1649,9 @@ DatabaseBlockchainCache::ExtendedPushedBlockInfo DatabaseBlockchainCache::getExt
   extendedInfo.pushedBlockInfo.blockSize = blockInfo.blockSize;
   extendedInfo.pushedBlockInfo.blockDifficulty = blockInfo.cumulativeDifficulty - previousBlockInfo.cumulativeDifficulty;
   extendedInfo.pushedBlockInfo.generatedCoins = blockInfo.alreadyGeneratedCoins - previousBlockInfo.alreadyGeneratedCoins;
+  //DL-TODO: check where Used and Update
+  extendedInfo.pushedBlockInfo.dustFundAmount = blockInfo.dustFundAmount;
+  extendedInfo.pushedBlockInfo.dustFundBalance = blockInfo.dustFundBalance;
 
   const auto& spentKeyImages = dbResult.getSpentKeyImagesByBlock().at(blockIndex);
 

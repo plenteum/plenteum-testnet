@@ -93,9 +93,9 @@ inline IBlockchainCache* findIndexInChain(IBlockchainCache* blockSegment, uint32
 }
 
 size_t getMaximumTransactionAllowedSize(size_t blockSizeMedian, const Currency& currency) {
-  assert(blockSizeMedian * 2 > currency.minerTxBlobReservedSize());
+  assert(blockSizeMedian * 2 > currency.minerTxBlobReservedSize() + currency.dustfundBlobReservedSize());
 
-  return blockSizeMedian * 2 - currency.minerTxBlobReservedSize();
+  return blockSizeMedian * 2 - currency.minerTxBlobReservedSize() - currency.dustfundBlobReservedSize();
 }
 
 BlockTemplate extractBlockTemplate(const RawBlock& block) {
@@ -141,19 +141,25 @@ TransactionValidatorState extractSpentOutputs(const std::vector<CachedTransactio
 }
 
 int64_t getEmissionChange(const Currency& currency, IBlockchainCache& segment, uint32_t previousBlockIndex,
-                          const CachedBlock& cachedBlock, uint64_t cumulativeSize, uint64_t cumulativeFee) {
+	const CachedBlock& cachedBlock, uint64_t cumulativeSize, uint64_t cumulativeFee) {
 
-  uint64_t reward = 0;
-  int64_t emissionChange = 0;
-  auto alreadyGeneratedCoins = segment.getAlreadyGeneratedCoins(previousBlockIndex);
-  auto lastBlocksSizes = segment.getLastBlocksSizes(currency.rewardBlocksWindow(), previousBlockIndex, addGenesisBlock);
-  auto blocksSizeMedian = Common::medianValue(lastBlocksSizes);
-  if (!currency.getBlockReward(cachedBlock.getBlock().majorVersion, blocksSizeMedian,
-                               cumulativeSize, alreadyGeneratedCoins, cumulativeFee, reward, emissionChange)) {
-    throw std::system_error(make_error_code(error::BlockValidationError::CUMULATIVE_BLOCK_SIZE_TOO_BIG));
-  }
+	uint64_t reward = 0;
+	int64_t emissionChange = 0;
+	auto alreadyGeneratedCoins = segment.getAlreadyGeneratedCoins(previousBlockIndex);
+	auto lastBlocksSizes = segment.getLastBlocksSizes(currency.rewardBlocksWindow(), previousBlockIndex, addGenesisBlock);
+	auto blocksSizeMedian = Common::medianValue(lastBlocksSizes);
+	if (!currency.getBlockReward(cachedBlock.getBlock().majorVersion, blocksSizeMedian,
+		cumulativeSize, alreadyGeneratedCoins, cumulativeFee, reward, emissionChange)) {
+		throw std::system_error(make_error_code(error::BlockValidationError::CUMULATIVE_BLOCK_SIZE_TOO_BIG));
+	}
 
-  return emissionChange;
+	return emissionChange;
+}
+
+int64_t getDustFundPreviousBalance(IBlockchainCache& segment, uint32_t previousBlockIndex) {
+	int64_t dusFundBalance = 0;
+	auto dustFundBalance = segment.getDustFundBalance(previousBlockIndex);
+	return dustFundBalance;
 }
 
 uint32_t findCommonRoot(IMainChainStorage& storage, IBlockchainCache& rootSegment) {
@@ -628,7 +634,9 @@ std::error_code Core::addBlock(const CachedBlock& cachedBlock, RawBlock&& rawBlo
 
   uint64_t reward = 0;
   int64_t emissionChange = 0;
+  int64_t dustFundAmount = 0;
   auto alreadyGeneratedCoins = cache->getAlreadyGeneratedCoins(previousBlockIndex);
+  auto dustFundBalance = cache->getDustFundBalance(previousBlockIndex);
   auto lastBlocksSizes = cache->getLastBlocksSizes(currency.rewardBlocksWindow(), previousBlockIndex, addGenesisBlock);
   auto blocksSizeMedian = Common::medianValue(lastBlocksSizes);
 
@@ -660,12 +668,13 @@ std::error_code Core::addBlock(const CachedBlock& cachedBlock, RawBlock&& rawBlo
     if (cache->getChildCount() == 0) {
       // add block on top of leaf segment.
       auto hashes = preallocateVector<Crypto::Hash>(transactions.size());
+	  //DL-TODO: Calc dustFund amount from previous Block TX's
 
       // TODO: exception safety
       if (cache == chainsLeaves[0]) {
         mainChainStorage->pushBlock(rawBlock);
 
-        cache->pushBlock(cachedBlock, transactions, validatorState, cumulativeBlockSize, emissionChange, currentDifficulty, std::move(rawBlock));
+        cache->pushBlock(cachedBlock, transactions, validatorState, cumulativeBlockSize, emissionChange, dustFundAmount, currentDifficulty, std::move(rawBlock));
 
         updateBlockMedianSize();
         actualizePoolTransactionsLite(validatorState);
@@ -678,7 +687,7 @@ std::error_code Core::addBlock(const CachedBlock& cachedBlock, RawBlock&& rawBlo
 
         notifyObservers(makeDelTransactionMessage(std::move(hashes), Messages::DeleteTransaction::Reason::InBlock));
       } else {
-        cache->pushBlock(cachedBlock, transactions, validatorState, cumulativeBlockSize, emissionChange, currentDifficulty, std::move(rawBlock));
+        cache->pushBlock(cachedBlock, transactions, validatorState, cumulativeBlockSize, emissionChange, dustFundAmount, currentDifficulty, std::move(rawBlock));
         logger(Logging::DEBUGGING) << "Block " << blockStr << " added to alternative chain.";
 
         auto mainChainCache = chainsLeaves[0];
@@ -714,7 +723,7 @@ std::error_code Core::addBlock(const CachedBlock& cachedBlock, RawBlock&& rawBlo
 
       logger(Logging::DEBUGGING) << "Resolving: " << blockStr;
 
-      newlyForkedChainPtr->pushBlock(cachedBlock, transactions, validatorState, cumulativeBlockSize, emissionChange,
+      newlyForkedChainPtr->pushBlock(cachedBlock, transactions, validatorState, cumulativeBlockSize, emissionChange, dustFundAmount,
                                      currentDifficulty, std::move(rawBlock));
 
       updateMainChainSet();
@@ -747,7 +756,7 @@ std::error_code Core::addBlock(const CachedBlock& cachedBlock, RawBlock&& rawBlo
     chainsStorage.emplace_back(std::move(newCache));
     chainsLeaves.push_back(newlyForkedChainPtr);
 
-    newlyForkedChainPtr->pushBlock(cachedBlock, transactions, validatorState, cumulativeBlockSize, emissionChange,
+    newlyForkedChainPtr->pushBlock(cachedBlock, transactions, validatorState, cumulativeBlockSize, emissionChange, dustFundAmount,
       currentDifficulty, std::move(rawBlock));
 
     updateMainChainSet();
@@ -1138,6 +1147,8 @@ bool Core::getBlockTemplate(BlockTemplate& b, const AccountPublicAddress& adr, c
   assert(!chainsStorage.empty());
   assert(!chainsLeaves.empty());
   uint64_t alreadyGeneratedCoins = chainsLeaves[0]->getAlreadyGeneratedCoins();
+  //DL-TODO: WTF ?
+  //uint64_t dustFundBalance = chainsLeaves[0]->getDustFundBalance();
 
   size_t transactionsSize;
   uint64_t fee;
@@ -1245,10 +1256,17 @@ size_t Core::getAlternativeBlockCount() const {
 }
 
 uint64_t Core::getTotalGeneratedAmount() const {
-  assert(!chainsLeaves.empty());
-  throwIfNotInitialized();
+	assert(!chainsLeaves.empty());
+	throwIfNotInitialized();
 
-  return chainsLeaves[0]->getAlreadyGeneratedCoins();
+	return chainsLeaves[0]->getAlreadyGeneratedCoins();
+}
+
+uint64_t Core::getDustFundBalance() const {
+	assert(!chainsLeaves.empty());
+	throwIfNotInitialized();
+
+	return chainsLeaves[0]->getDustFundBalance();
 }
 
 std::vector<BlockTemplate> Core::getAlternativeBlocks() const {
@@ -1628,8 +1646,11 @@ void Core::importBlocksFromStorage() {
       return fee + transaction.getTransactionFee();
     });
 
-    int64_t emissionChange = getEmissionChange(currency, *chainsLeaves[0], i - 1, cachedBlock, cumulativeSize, cumulativeFee);
-    chainsLeaves[0]->pushBlock(cachedBlock, transactions, spentOutputs, cumulativeSize, emissionChange, currentDifficulty, std::move(rawBlock));
+	int64_t emissionChange = getEmissionChange(currency, *chainsLeaves[0], i - 1, cachedBlock, cumulativeSize, cumulativeFee);
+	//DL-TODO: Calculate DustFund Balance
+	int64_t dustFundBalance = getDustFundPreviousBalance(*chainsLeaves[0], i - 1);
+
+    chainsLeaves[0]->pushBlock(cachedBlock, transactions, spentOutputs, cumulativeSize, emissionChange, dustFundBalance, currentDifficulty, std::move(rawBlock));
 
     if (i % 1000 == 0) {
       logger(Logging::INFO) << "Imported block with index " << i << " / " << (blockCount - 1);
@@ -1891,7 +1912,7 @@ void Core::fillBlockTemplate(BlockTemplate& block, size_t medianSize, size_t max
   fee = 0;
 
   size_t maxTotalSize = (125 * medianSize) / 100;
-  maxTotalSize = std::min(maxTotalSize, maxCumulativeSize) - currency.minerTxBlobReservedSize();
+  maxTotalSize = std::min(maxTotalSize, maxCumulativeSize) - currency.minerTxBlobReservedSize() - currency.dustfundBlobReservedSize();
 
   TransactionSpentInputsChecker spentInputsChecker;
 
@@ -2022,7 +2043,7 @@ void Core::mergeSegments(IBlockchainCache* acceptingSegment, IBlockchainCache* s
     }
 
     acceptingSegment->pushBlock(CachedBlock(block), transactions, info.validatorState, info.blockSize,
-                                info.generatedCoins, info.blockDifficulty, std::move(info.rawBlock));
+                                info.generatedCoins, info.dustFundAmount, info.blockDifficulty, std::move(info.rawBlock));
   }
 }
 
@@ -2075,14 +2096,19 @@ BlockDetails Core::getBlockDetails(const Crypto::Hash& blockHash) const {
   blockDetails.blockSize = blockBlobSize + blockDetails.transactionsCumulativeSize - coinbaseTransactionSize;
 
   blockDetails.alreadyGeneratedCoins = segment->getAlreadyGeneratedCoins(blockDetails.index);
+  //DO-TODO: Is this correct ?
+  //Temp hard code numbers to see if this is what's causing it to not populate
+  blockDetails.dustFundAmount = segment->getDustFundAmount(blockDetails.index);
+  blockDetails.dustFundBalance = segment->getDustFundBalance(blockDetails.index);
   blockDetails.alreadyGeneratedTransactions = segment->getAlreadyGeneratedTransactions(blockDetails.index);
 
   uint64_t prevBlockGeneratedCoins = 0;
+  uint64_t prevBlockDustFundBalance = 0;
   blockDetails.sizeMedian = 0;
   if (blockDetails.index > 0) {
     auto lastBlocksSizes = segment->getLastBlocksSizes(currency.rewardBlocksWindow(), blockDetails.index - 1, addGenesisBlock);
     blockDetails.sizeMedian = Common::medianValue(lastBlocksSizes);
-    prevBlockGeneratedCoins = segment->getAlreadyGeneratedCoins(blockDetails.index - 1);
+	prevBlockGeneratedCoins = segment->getAlreadyGeneratedCoins(blockDetails.index - 1);
   }
 
   int64_t emissionChange = 0;

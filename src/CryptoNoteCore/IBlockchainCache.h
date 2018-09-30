@@ -54,6 +54,8 @@ struct PushedBlockInfo {
   TransactionValidatorState validatorState;
   size_t blockSize;
   uint64_t generatedCoins;
+  uint64_t dustFundAmount;
+  uint64_t dustFundBalance; //cumulative balance 
   uint64_t blockDifficulty;
 };
 
@@ -89,7 +91,8 @@ public:
       const std::vector<CachedTransaction>& cachedTransactions,
       const TransactionValidatorState& validatorState,
       size_t blockSize,
-      uint64_t generatedCoins,
+	  uint64_t generatedCoins,
+	  uint64_t dustFundAmount,
       uint64_t blockDifficulty,
       RawBlock&& rawBlock) = 0;
   virtual PushedBlockInfo getPushedBlockInfo(uint32_t index) const = 0;
@@ -134,6 +137,12 @@ public:
 
   virtual uint64_t getAlreadyGeneratedCoins() const = 0;
   virtual uint64_t getAlreadyGeneratedCoins(uint32_t blockIndex) const = 0;
+
+  virtual uint64_t getDustFundAmount() const = 0;
+  virtual uint64_t getDustFundAmount(uint32_t blockIndex) const = 0;
+
+  virtual uint64_t getDustFundBalance() const = 0;
+  virtual uint64_t getDustFundBalance(uint32_t blockIndex) const = 0;
 
   virtual uint64_t getAlreadyGeneratedTransactions(uint32_t blockIndex) const = 0;
 

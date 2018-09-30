@@ -99,6 +99,8 @@ struct BlockDetails {
   uint64_t blockSize = 0;
   uint64_t transactionsCumulativeSize = 0;
   uint64_t alreadyGeneratedCoins = 0;
+  uint64_t dustFundAmount = 0;
+  uint64_t dustFundBalance = 0;
   uint64_t alreadyGeneratedTransactions = 0;
   uint64_t sizeMedian = 0;
   double penalty = 0.0;

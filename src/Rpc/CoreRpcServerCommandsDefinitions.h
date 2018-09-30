@@ -515,27 +515,29 @@ struct f_block_short_response {
 };
 
 struct f_block_details_response {
-  uint8_t major_version;
-  uint8_t minor_version;  
-  uint64_t timestamp;
-  std::string prev_hash;
-  uint32_t nonce;
+  uint8_t major_version;//-
+  uint8_t minor_version;  //-
+  uint64_t timestamp;//-
+  std::string prev_hash;//-
+  uint32_t nonce;//-
   bool orphan_status;
-  uint32_t height;
-  uint64_t depth;
-  std::string hash;
-  uint64_t difficulty;
-  uint64_t reward;
-  uint64_t blockSize;
-  size_t sizeMedian;
-  uint64_t effectiveSizeMedian;
-  uint64_t transactionsCumulativeSize;
-  std::string alreadyGeneratedCoins;
-  uint64_t alreadyGeneratedTransactions;
-  uint64_t baseReward;
-  double penalty;
-  uint64_t totalFeeAmount;
-  std::vector<f_transaction_short_response> transactions;
+  uint32_t height;//-
+  uint64_t depth;//-
+  std::string hash;//-
+  uint64_t difficulty;//-
+  uint64_t reward;//-
+  uint64_t blockSize;//-
+  size_t sizeMedian;//-
+  uint64_t effectiveSizeMedian;//-
+  uint64_t transactionsCumulativeSize;//-
+  std::string alreadyGeneratedCoins;//-
+  uint64_t dustFundAmount; //the amount contributed to dustFund from this block
+  uint64_t dustFundBalance; //the total balance of the dustFund to date
+  uint64_t alreadyGeneratedTransactions;//-
+  uint64_t baseReward;//-
+  double penalty;//-
+  uint64_t totalFeeAmount;//-
+  std::vector<f_transaction_short_response> transactions;//-
 
   void serialize(ISerializer &s) {
     KV_MEMBER(major_version)
@@ -553,7 +555,9 @@ struct f_block_details_response {
     KV_MEMBER(sizeMedian)
     KV_MEMBER(effectiveSizeMedian)
     KV_MEMBER(transactionsCumulativeSize)
-    KV_MEMBER(alreadyGeneratedCoins)
+	KV_MEMBER(alreadyGeneratedCoins)
+	KV_MEMBER(dustFundAmount)
+	KV_MEMBER(dustFundBalance)
     KV_MEMBER(alreadyGeneratedTransactions)
     KV_MEMBER(baseReward)
     KV_MEMBER(penalty)

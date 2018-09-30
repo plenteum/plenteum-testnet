@@ -28,6 +28,7 @@ public:
   virtual size_t getBlockchainTransactionCount() const = 0;
   virtual size_t getAlternativeBlockCount() const = 0;
   virtual uint64_t getTotalGeneratedAmount() const = 0;
+  virtual uint64_t getDustFundBalance() const = 0;
   virtual std::vector<BlockTemplate> getAlternativeBlocks() const = 0;
   virtual std::vector<Transaction> getPoolTransactions() const = 0;
 };

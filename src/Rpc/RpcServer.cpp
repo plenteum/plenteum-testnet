@@ -662,6 +662,9 @@ bool RpcServer::f_on_block_json(const F_COMMAND_RPC_GET_BLOCK_DETAILS::request& 
   res.block.difficulty = m_core.getBlockDifficulty(res.block.height);
   res.block.transactionsCumulativeSize = blkDetails.transactionsCumulativeSize;
   res.block.alreadyGeneratedCoins = std::to_string(blkDetails.alreadyGeneratedCoins);
+  //temp hardcode to see if this fixes serialization 
+  res.block.dustFundAmount = blkDetails.dustFundAmount;
+  res.block.dustFundBalance = blkDetails.dustFundBalance;
   res.block.alreadyGeneratedTransactions = blkDetails.alreadyGeneratedTransactions;
   res.block.reward = block_header.reward;
   res.block.sizeMedian = blkDetails.sizeMedian;

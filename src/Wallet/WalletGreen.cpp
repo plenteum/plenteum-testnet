@@ -2345,13 +2345,26 @@ namespace CryptoNote {
 
 		std::unique_ptr<ITransaction> tx = createTransaction();
 
+		//DL-TODO: extract DUST and place in tx Extra 
+		uint64_t dustFundContribution = 0;
+		uint64_t dustFundLimit = 1000000; //DL-TODO: Update limit to use params (les than 0.01)
+
 		typedef std::pair<const AccountPublicAddress*, uint64_t> AmountToAddress;
 		std::vector<AmountToAddress> amountsToAddresses;
 		for (const auto& output : decomposedOutputs) {
 			for (auto amount : output.amounts) {
-				amountsToAddresses.emplace_back(AmountToAddress{ &output.receiver, amount });
+				if (amount < dustFundLimit)
+				{
+					dustFundContribution += amount; //allocate the dust to the dust fund contribution
+				}
+				else {
+					amountsToAddresses.emplace_back(AmountToAddress{ &output.receiver, amount });
+				}
 			}
 		}
+		//add the dust to extra
+		std::string extraWithDust = extra;
+		extraWithDust += "{df:"+ std::to_string(dustFundContribution) + "}";
 
 		std::shuffle(amountsToAddresses.begin(), amountsToAddresses.end(), std::default_random_engine{ Crypto::rand<std::default_random_engine::result_type>() });
 		std::sort(amountsToAddresses.begin(), amountsToAddresses.end(), [](const AmountToAddress& left, const AmountToAddress& right) {
@@ -2363,8 +2376,8 @@ namespace CryptoNote {
 		}
 
 		tx->setUnlockTime(unlockTimestamp);
-		tx->appendExtra(Common::asBinaryArray(extra));
-
+		tx->appendExtra(Common::asBinaryArray(extraWithDust)); //change to include extra with dust
+		
 		for (auto& input : keysInfo) {
 			tx->addInput(makeAccountKeys(*input.walletRecord), input.keyInfo, input.ephKeys);
 		}
@@ -2377,6 +2390,7 @@ namespace CryptoNote {
 		m_logger(DEBUGGING) << "Transaction created, hash " << tx->getTransactionHash() <<
 			", inputs " << m_currency.formatAmount(tx->getInputTotalAmount()) <<
 			", outputs " << m_currency.formatAmount(tx->getOutputTotalAmount()) <<
+			", dustContribution " << m_currency.formatAmount(dustFundContribution) <<
 			", fee " << m_currency.formatAmount(tx->getInputTotalAmount() - tx->getOutputTotalAmount());
 		return tx;
 	}
@@ -3800,8 +3814,7 @@ namespace CryptoNote {
 
 		size_t y = 125000;
 
-		return std::min(x, y) - CryptoNote::parameters
-			::CRYPTONOTE_COINBASE_BLOB_RESERVED_SIZE;
+		return std::min(x, y) - CryptoNote::parameters::CRYPTONOTE_COINBASE_BLOB_RESERVED_SIZE - CryptoNote::parameters::CRYPTONOTE_DUSTFUND_BLOB_RESERVED_SIZE;
 	}
 
 } //namespace CryptoNote

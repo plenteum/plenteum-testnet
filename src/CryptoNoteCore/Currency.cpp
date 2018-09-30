@@ -661,6 +661,7 @@ m_rewardBlocksWindow(currency.m_rewardBlocksWindow),
 m_blockGrantedFullRewardZone(currency.m_blockGrantedFullRewardZone),
 m_isBlockexplorer(currency.m_isBlockexplorer),
 m_minerTxBlobReservedSize(currency.m_minerTxBlobReservedSize),
+m_dustfundBlobReservedSize(currency.m_dustfundBlobReservedSize),
 m_numberOfDecimalPlaces(currency.m_numberOfDecimalPlaces),
 m_numberOfDisplayDecimalPlaces(currency.m_numberOfDisplayDecimalPlaces),
 m_coin(currency.m_coin),
@@ -720,7 +721,8 @@ zawyDifficultyV2(parameters::ZAWY_DIFFICULTY_V2);
 zawyDifficultyBlockVersion(parameters::ZAWY_DIFFICULTY_DIFFICULTY_BLOCK_VERSION);
   blockGrantedFullRewardZone(parameters::CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE);
   minerTxBlobReservedSize(parameters::CRYPTONOTE_COINBASE_BLOB_RESERVED_SIZE);
-
+  dustfundBlobReservedSize(parameters::CRYPTONOTE_DUSTFUND_BLOB_RESERVED_SIZE);
+  //TODO: add dustfund Blob reserved size
   numberOfDisplayDecimalPlaces(parameters::CRYPTONOTE_DISPLAY_DECIMAL_POINT);
   numberOfDecimalPlaces(parameters::CRYPTONOTE_DUST_DECIMAL_POINT);
 
