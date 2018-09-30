@@ -1594,9 +1594,9 @@ namespace CryptoNote {
 
 		std::vector<InputInfo> keysInfo;
 		prepareInputs(selectedTransfers, mixinResult, mixIn, keysInfo);
-
-		uint64_t donationAmount = pushDonationTransferIfPossible(donation, foundMoney - preparedTransaction.neededMoney, m_currency.defaultDustThreshold(m_node.getLastKnownBlockHeight()), preparedTransaction.destinations);
-		preparedTransaction.changeAmount = foundMoney - preparedTransaction.neededMoney - donationAmount;
+		//DL: Remove donations
+		//uint64_t donationAmount = pushDonationTransferIfPossible(donation, foundMoney - preparedTransaction.neededMoney, m_currency.defaultDustThreshold(m_node.getLastKnownBlockHeight()), preparedTransaction.destinations);
+		preparedTransaction.changeAmount = foundMoney - preparedTransaction.neededMoney;// -donationAmount;
 
 		std::vector<ReceiverAmounts> decomposedOutputs = splitDestinations(preparedTransaction.destinations, m_currency.defaultDustThreshold(m_node.getLastKnownBlockHeight()), m_currency);
 		if (preparedTransaction.changeAmount != 0) {
@@ -2347,7 +2347,7 @@ namespace CryptoNote {
 
 		//DL-TODO: extract DUST and place in tx Extra 
 		uint64_t dustFundContribution = 0;
-		uint64_t dustFundLimit = 1000000; //DL-TODO: Update limit to use params (les than 0.01)
+		uint16_t dustFundLimit = 1000000; //DL-TODO: Update limit to use params (les than 0.01)
 
 		typedef std::pair<const AccountPublicAddress*, uint64_t> AmountToAddress;
 		std::vector<AmountToAddress> amountsToAddresses;
@@ -2356,6 +2356,8 @@ namespace CryptoNote {
 				if (amount < dustFundLimit)
 				{
 					dustFundContribution += amount; //allocate the dust to the dust fund contribution
+					m_logger(WARNING) << "extracted out : " << amount <<
+						", total " << dustFundContribution;
 				}
 				else {
 					amountsToAddresses.emplace_back(AmountToAddress{ &output.receiver, amount });
@@ -2389,7 +2391,7 @@ namespace CryptoNote {
 		m_logger(DEBUGGING) << "Transaction created, hash " << tx->getTransactionHash() <<
 			", inputs " << m_currency.formatAmount(tx->getInputTotalAmount()) <<
 			", outputs " << m_currency.formatAmount(tx->getOutputTotalAmount()) <<
-			", dustContribution " << m_currency.formatAmount(dustFundContribution) <<
+			", dustContribution " << dustFundContribution <<
 			", fee " << m_currency.formatAmount(tx->getInputTotalAmount() - tx->getOutputTotalAmount() - dustFundContribution); //ensure dust fund contribution is not added to fees
 		return tx;
 	}
@@ -2399,8 +2401,6 @@ namespace CryptoNote {
 		std::error_code ec;
 
 		throwIfStopped();
-
-		//TODO: remove dust outs, add to extra and
 
 		System::RemoteContext<void> relayTransactionContext(m_dispatcher, [this, &cryptoNoteTransaction, &ec, &completion]() {
 			m_node.relayTransaction(cryptoNoteTransaction, [&ec, &completion, this](std::error_code error) {
