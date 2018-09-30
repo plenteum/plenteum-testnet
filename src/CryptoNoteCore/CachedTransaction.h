@@ -31,6 +31,7 @@ public:
   const Crypto::Hash& getTransactionHash() const;
   const Crypto::Hash& getTransactionPrefixHash() const;
   const BinaryArray& getTransactionBinaryArray() const;
+  uint64_t getDustAmount() const;
   uint64_t getTransactionFee() const;
 
 private:

@@ -62,11 +62,13 @@ const BinaryArray& CachedTransaction::getTransactionBinaryArray() const {
 
   return transactionBinaryArray.get();
 }
-
+//DL-TODO: Update this to take dust fund into account
 uint64_t CachedTransaction::getTransactionFee() const {
   if (!transactionFee.is_initialized()) {
     uint64_t summaryInputAmount = 0;
-    uint64_t summaryOutputAmount = 0;
+	uint64_t summaryOutputAmount = 0;
+	uint64_t summaryDustAmount = 0;
+
     for (auto& out : transaction.outputs) {
       summaryOutputAmount += out.amount;
     }
@@ -81,7 +83,7 @@ uint64_t CachedTransaction::getTransactionFee() const {
       }
     }
 
-    transactionFee = summaryInputAmount - summaryOutputAmount;
+    transactionFee = summaryInputAmount - summaryOutputAmount - summaryDustAmount;
   }
 
   return transactionFee.get();

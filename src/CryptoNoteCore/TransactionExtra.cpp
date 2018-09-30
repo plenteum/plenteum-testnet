@@ -42,6 +42,8 @@ bool parseTransactionExtra(const std::vector<uint8_t> &transactionExtra, std::ve
   bool seen_tx_extra_tag_dustamt = false;
 
   try {
+	  //DL-TODO: PROBLEM IS HERE - NOT GETTING CORRECT DUST AMOUNT
+
     MemoryInputStream iss(transactionExtra.data(), transactionExtra.size());
     BinaryInputStreamSerializer ar(iss);
 
@@ -123,7 +125,7 @@ bool parseTransactionExtra(const std::vector<uint8_t> &transactionExtra, std::ve
 
 		  seen_tx_extra_tag_dustamt = true;
 
-		  TransactionExtraDustAmount extraDustAmount;
+		  TransactionExtraDustAmountTag extraDustAmount;
 		  ar(extraDustAmount.amount, "dust_amount");
 		  transactionExtraFields.push_back(extraDustAmount);
 		  break;
@@ -163,7 +165,7 @@ struct ExtraSerializerVisitor : public boost::static_visitor<bool> {
 	  return appendMergeMiningTagToExtra(extra, t);
   }
 
-  bool operator()(const TransactionExtraDustAmount& t) {
+  bool operator()(const TransactionExtraDustAmountTag& t) {
 	  return appendDustAmountTagToExtra(extra, t);
   }
 };
@@ -195,7 +197,7 @@ uint64_t getDustAmountFromTxExtra(const std::vector<uint8_t>& tx_extra) {
 	std::vector<TransactionExtraField> tx_extra_fields;
 	parseTransactionExtra(tx_extra, tx_extra_fields);
 
-	TransactionExtraDustAmount dust_amount_field;
+	TransactionExtraDustAmountTag dust_amount_field;
 	if (!findTransactionExtraFieldByType(tx_extra_fields, dust_amount_field))
 		return 0;
 
@@ -239,18 +241,25 @@ bool appendMergeMiningTagToExtra(std::vector<uint8_t>& tx_extra, const Transacti
 	return true;
 }
 
-bool appendDustAmountTagToExtra(std::vector<uint8_t>& tx_extra, const TransactionExtraDustAmount& dustAmount) {
-	tx_extra.resize(tx_extra.size() + 1 + sizeof(TransactionExtraDustAmount));
-	tx_extra[tx_extra.size() - 1 - sizeof(TransactionExtraDustAmount)] = TX_EXTRA_TAG_DUST_AMOUNT;
-	*reinterpret_cast<TransactionExtraDustAmount*>(&tx_extra[tx_extra.size() - sizeof(TransactionExtraDustAmount)]) = dustAmount;
+bool appendDustAmountTagToExtra(std::vector<uint8_t>& tx_extra, const TransactionExtraDustAmountTag& dustAmount) {
+	tx_extra.resize(tx_extra.size() + 1 + sizeof(TransactionExtraDustAmountTag));
+	tx_extra[tx_extra.size() - 1 - sizeof(TransactionExtraDustAmountTag)] = TX_EXTRA_TAG_DUST_AMOUNT;
+	*reinterpret_cast<TransactionExtraDustAmountTag*>(&tx_extra[tx_extra.size() - sizeof(TransactionExtraDustAmountTag)]) = dustAmount;
 	return true;
 }
 
 bool getMergeMiningTagFromExtra(const std::vector<uint8_t>& tx_extra, TransactionExtraMergeMiningTag& mm_tag) {
-  std::vector<TransactionExtraField> tx_extra_fields;
-  parseTransactionExtra(tx_extra, tx_extra_fields);
+	std::vector<TransactionExtraField> tx_extra_fields;
+	parseTransactionExtra(tx_extra, tx_extra_fields);
 
-  return findTransactionExtraFieldByType(tx_extra_fields, mm_tag);
+	return findTransactionExtraFieldByType(tx_extra_fields, mm_tag);
+}
+
+bool getDustAmountTagFromExtra(const std::vector<uint8_t>& tx_extra, TransactionExtraDustAmountTag& dustAmount) {
+	std::vector<TransactionExtraField> tx_extra_fields;
+	parseTransactionExtra(tx_extra, tx_extra_fields);
+
+	return findTransactionExtraFieldByType(tx_extra_fields, dustAmount);
 }
 
 void setPaymentIdToTransactionExtraNonce(std::vector<uint8_t>& extra_nonce, const Hash& payment_id) {

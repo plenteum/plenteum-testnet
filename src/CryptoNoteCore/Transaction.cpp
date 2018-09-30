@@ -354,7 +354,7 @@ namespace CryptoNote {
 
   void TransactionImpl::setExtraDustAmount(uint64_t amount) {
 	  checkIfSigning();
-	  TransactionExtraDustAmount dustAmount = { amount };
+	  TransactionExtraDustAmountTag dustAmount = { amount };
 	  extra.set(dustAmount);
 	  transaction.extra = extra.serialize();
 	  invalidateHash();
@@ -376,7 +376,7 @@ namespace CryptoNote {
   }
 
   bool TransactionImpl::getExtraDustAmount(uint64_t& dustAmount) const {
-	  TransactionExtraDustAmount extraDustAmount;
+	  TransactionExtraDustAmountTag extraDustAmount;
 	  if (extra.get(extraDustAmount)) {
 		  dustAmount = extraDustAmount.amount;
 		  return true;

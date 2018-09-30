@@ -2225,6 +2225,7 @@ TransactionDetails Core::getTransactionDetails(const Crypto::Hash& transactionHa
     transactionDetails.hasPaymentId = true;
   }
   transactionDetails.extra.publicKey = transaction->getTransactionPublicKey();
+
   transaction->getExtraNonce(transactionDetails.extra.nonce);
 
   transactionDetails.signatures = rawTransaction.signatures;

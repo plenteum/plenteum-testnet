@@ -69,7 +69,7 @@ namespace CryptoNote {
 	}
 
 	uint64_t getDustAmount() const {
-		CryptoNote::TransactionExtraDustAmount extraDustAmount;
+		CryptoNote::TransactionExtraDustAmountTag extraDustAmount;
 		if (!get(extraDustAmount)) {
 			return false;
 		}

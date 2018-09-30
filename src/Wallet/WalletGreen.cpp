@@ -2367,12 +2367,7 @@ namespace CryptoNote {
 		//add the dust to extra
 		tx->setExtraDustAmount(dustFundContribution);
 
-		uint64_t placedDust = 0;
-
-		tx->getExtraDustAmount(placedDust);
-		//check if dust set correctly
-		m_logger(WARNING) << "dust amount set, expected  : " << dustFundContribution <<
-			", found " << placedDust;
+		
 
 		std::shuffle(amountsToAddresses.begin(), amountsToAddresses.end(), std::default_random_engine{ Crypto::rand<std::default_random_engine::result_type>() });
 		std::sort(amountsToAddresses.begin(), amountsToAddresses.end(), [](const AmountToAddress& left, const AmountToAddress& right) {
@@ -2396,6 +2391,11 @@ namespace CryptoNote {
 		for (auto& input : keysInfo) {
 			tx->signInputKey(i++, input.keyInfo, input.ephKeys);
 		}
+		uint64_t placedDust = 0;
+		tx->getExtraDustAmount(placedDust);
+		//check if dust set correctly
+		m_logger(WARNING) << "dust amount set, expected  : " << dustFundContribution <<
+			", found " << placedDust;
 
 		m_logger(DEBUGGING) << "Transaction created, hash " << tx->getTransactionHash() <<
 			", inputs " << m_currency.formatAmount(tx->getInputTotalAmount()) <<
