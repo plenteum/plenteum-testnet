@@ -468,12 +468,14 @@ struct f_transaction_short_response {
   std::string hash;
   uint64_t fee;
   uint64_t amount_out;
+  uint64_t dust_amount;
   uint64_t size;
 
   void serialize(ISerializer &s) {
     KV_MEMBER(hash)
     KV_MEMBER(fee)
-    KV_MEMBER(amount_out)
+	KV_MEMBER(amount_out)
+	KV_MEMBER(dust_amount)
     KV_MEMBER(size)
   }
 };
@@ -485,6 +487,7 @@ struct f_transaction_details_response {
   uint64_t mixin;
   uint64_t fee;
   uint64_t amount_out;
+  uint64_t dust_amount;
 
   void serialize(ISerializer &s) {
     KV_MEMBER(hash)
@@ -492,7 +495,8 @@ struct f_transaction_details_response {
     KV_MEMBER(paymentId)
     KV_MEMBER(mixin)
     KV_MEMBER(fee)
-    KV_MEMBER(amount_out)
+	KV_MEMBER(amount_out)
+	KV_MEMBER(dust_amount)
   }
 };
 

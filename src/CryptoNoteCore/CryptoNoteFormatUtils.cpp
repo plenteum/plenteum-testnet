@@ -99,6 +99,7 @@ uint64_t power_integral(uint64_t a, uint64_t b) {
 bool get_tx_fee(const Transaction& tx, uint64_t & fee) {
   uint64_t amount_in = 0;
   uint64_t amount_out = 0;
+  uint64_t dust_amount = getDustAmountFromTxExtra(tx.extra);
 
   for (const auto& in : tx.inputs) {
     if (in.type() == typeid(KeyInput)) {
@@ -110,11 +111,11 @@ bool get_tx_fee(const Transaction& tx, uint64_t & fee) {
     amount_out += o.amount;
   }
 
-  if (!(amount_in >= amount_out)) {
+  if (!(amount_in >= (amount_out + dust_amount))) {
     return false;
   }
 
-  fee = amount_in - amount_out;
+  fee = amount_in - amount_out - dust_amount;
   return true;
 }
 

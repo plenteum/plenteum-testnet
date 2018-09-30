@@ -2363,8 +2363,7 @@ namespace CryptoNote {
 			}
 		}
 		//add the dust to extra
-		std::string extraWithDust = extra;
-		extraWithDust += "{df:"+ std::to_string(dustFundContribution) + "}";
+		tx->setExtraDustAmount(dustFundContribution);
 
 		std::shuffle(amountsToAddresses.begin(), amountsToAddresses.end(), std::default_random_engine{ Crypto::rand<std::default_random_engine::result_type>() });
 		std::sort(amountsToAddresses.begin(), amountsToAddresses.end(), [](const AmountToAddress& left, const AmountToAddress& right) {
@@ -2376,7 +2375,7 @@ namespace CryptoNote {
 		}
 
 		tx->setUnlockTime(unlockTimestamp);
-		tx->appendExtra(Common::asBinaryArray(extraWithDust)); //change to include extra with dust
+		tx->appendExtra(Common::asBinaryArray(extra)); 
 		
 		for (auto& input : keysInfo) {
 			tx->addInput(makeAccountKeys(*input.walletRecord), input.keyInfo, input.ephKeys);
@@ -2391,7 +2390,7 @@ namespace CryptoNote {
 			", inputs " << m_currency.formatAmount(tx->getInputTotalAmount()) <<
 			", outputs " << m_currency.formatAmount(tx->getOutputTotalAmount()) <<
 			", dustContribution " << m_currency.formatAmount(dustFundContribution) <<
-			", fee " << m_currency.formatAmount(tx->getInputTotalAmount() - tx->getOutputTotalAmount());
+			", fee " << m_currency.formatAmount(tx->getInputTotalAmount() - tx->getOutputTotalAmount() - dustFundContribution); //ensure dust fund contribution is not added to fees
 		return tx;
 	}
 

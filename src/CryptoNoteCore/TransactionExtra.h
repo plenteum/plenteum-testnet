@@ -39,7 +39,11 @@ struct TransactionExtraPadding {
 };
 
 struct TransactionExtraPublicKey {
-  Crypto::PublicKey publicKey;
+	Crypto::PublicKey publicKey;
+};
+
+struct TransactionExtraDustAmount {
+	uint64_t amount;
 };
 
 struct TransactionExtraNonce {
@@ -55,7 +59,7 @@ struct TransactionExtraMergeMiningTag {
 //   varint tag;
 //   varint size;
 //   varint data[];
-typedef boost::variant<TransactionExtraPadding, TransactionExtraPublicKey, TransactionExtraNonce, TransactionExtraMergeMiningTag> TransactionExtraField;
+typedef boost::variant<TransactionExtraPadding, TransactionExtraPublicKey, TransactionExtraNonce, TransactionExtraMergeMiningTag, TransactionExtraDustAmount> TransactionExtraField;
 
 
 
@@ -75,6 +79,7 @@ bool parseTransactionExtra(const std::vector<uint8_t>& tx_extra, std::vector<Tra
 bool writeTransactionExtra(std::vector<uint8_t>& tx_extra, const std::vector<TransactionExtraField>& tx_extra_fields);
 
 Crypto::PublicKey getTransactionPublicKeyFromExtra(const std::vector<uint8_t>& tx_extra);
+uint64_t getDustAmountFromTxExtra(const std::vector<uint8_t>& tx_extra);
 bool addTransactionPublicKeyToExtra(std::vector<uint8_t>& tx_extra, const Crypto::PublicKey& tx_pub_key);
 bool addExtraNonceToTransactionExtra(std::vector<uint8_t>& tx_extra, const BinaryArray& extra_nonce);
 void setPaymentIdToTransactionExtraNonce(BinaryArray& extra_nonce, const Crypto::Hash& payment_id);

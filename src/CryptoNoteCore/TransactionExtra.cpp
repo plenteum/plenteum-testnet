@@ -163,14 +163,25 @@ bool writeTransactionExtra(std::vector<uint8_t>& tx_extra, const std::vector<Tra
 }
 
 PublicKey getTransactionPublicKeyFromExtra(const std::vector<uint8_t>& tx_extra) {
-  std::vector<TransactionExtraField> tx_extra_fields;
-  parseTransactionExtra(tx_extra, tx_extra_fields);
+	std::vector<TransactionExtraField> tx_extra_fields;
+	parseTransactionExtra(tx_extra, tx_extra_fields);
 
-  TransactionExtraPublicKey pub_key_field;
-  if (!findTransactionExtraFieldByType(tx_extra_fields, pub_key_field))
-    return boost::value_initialized<PublicKey>();
+	TransactionExtraPublicKey pub_key_field;
+	if (!findTransactionExtraFieldByType(tx_extra_fields, pub_key_field))
+		return boost::value_initialized<PublicKey>();
 
-  return pub_key_field.publicKey;
+	return pub_key_field.publicKey;
+}
+
+uint64_t getDustAmountFromTxExtra(const std::vector<uint8_t>& tx_extra) {
+	std::vector<TransactionExtraField> tx_extra_fields;
+	parseTransactionExtra(tx_extra, tx_extra_fields);
+
+	TransactionExtraDustAmount dust_amount_field;
+	if (!findTransactionExtraFieldByType(tx_extra_fields, dust_amount_field))
+		return 0;
+
+	return dust_amount_field.amount;
 }
 
 bool addTransactionPublicKeyToExtra(std::vector<uint8_t>& tx_extra, const PublicKey& tx_pub_key) {

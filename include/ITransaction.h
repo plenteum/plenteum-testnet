@@ -67,6 +67,7 @@ public:
   // extra
   virtual bool getPaymentId(Crypto::Hash& paymentId) const = 0;
   virtual bool getExtraNonce(BinaryArray& nonce) const = 0;
+  virtual bool getExtraDustAmount(uint64_t& amount) const = 0;
   virtual BinaryArray getExtra() const = 0;
 
   // inputs
@@ -108,6 +109,7 @@ public:
   // extra
   virtual void setPaymentId(const Crypto::Hash& paymentId) = 0;
   virtual void setExtraNonce(const BinaryArray& nonce) = 0;
+  virtual void setExtraDustAmount(uint64_t amount) = 0;
   virtual void appendExtra(const BinaryArray& extraData) = 0;
 
   // Inputs/Outputs 

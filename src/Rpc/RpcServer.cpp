@@ -690,6 +690,7 @@ bool RpcServer::f_on_block_json(const F_COMMAND_RPC_GET_BLOCK_DETAILS::request& 
   transaction_short.hash = Common::podToHex(getObjectHash(blk.baseTransaction));
   transaction_short.fee = 0;
   transaction_short.amount_out = getOutputAmount(blk.baseTransaction);
+  transaction_short.dust_amount = getDustAmountFromTxExtra(blk.baseTransaction.extra);
   transaction_short.size = getObjectBinarySize(blk.baseTransaction);
   res.block.transactions.push_back(transaction_short);
 
@@ -708,9 +709,11 @@ bool RpcServer::f_on_block_json(const F_COMMAND_RPC_GET_BLOCK_DETAILS::request& 
     uint64_t amount_in = getInputAmount(tx);
     uint64_t amount_out = getOutputAmount(tx);
 
+	transaction_short.dust_amount = getDustAmountFromTxExtra(tx.extra);
     transaction_short.hash = Common::podToHex(getObjectHash(tx));
-    transaction_short.fee = amount_in - amount_out;
-    transaction_short.amount_out = amount_out;
+    transaction_short.fee = amount_in - amount_out - transaction_short.dust_amount; //ensure dust is removed 
+	transaction_short.amount_out = amount_out;
+	
     transaction_short.size = getObjectBinarySize(tx);
     res.block.transactions.push_back(transaction_short);
 
@@ -779,9 +782,13 @@ bool RpcServer::f_on_transaction_json(const F_COMMAND_RPC_GET_TRANSACTION_DETAIL
 
   uint64_t amount_in = getInputAmount(res.tx);
   uint64_t amount_out = getOutputAmount(res.tx);
+  uint64_t dust_amount = getDustAmountFromTxExtra(res.tx.extra);
+
+  //fetch dust
+  res.txDetails.dust_amount = dust_amount;
 
   res.txDetails.hash = Common::podToHex(getObjectHash(res.tx));
-  res.txDetails.fee = amount_in - amount_out;
+  res.txDetails.fee = amount_in - amount_out - dust_amount;
   if (amount_in == 0)
     res.txDetails.fee = 0;
   res.txDetails.amount_out = amount_out;
@@ -795,11 +802,12 @@ bool RpcServer::f_on_transaction_json(const F_COMMAND_RPC_GET_TRANSACTION_DETAIL
 
   Crypto::Hash paymentId;
   if (CryptoNote::getPaymentIdFromTxExtra(res.tx.extra, paymentId)) {
-    res.txDetails.paymentId = Common::podToHex(paymentId);
-  } else {
-    res.txDetails.paymentId = "";
+	  res.txDetails.paymentId = Common::podToHex(paymentId);
   }
-
+  else {
+	  res.txDetails.paymentId = "";
+  }
+  
   res.status = CORE_RPC_STATUS_OK;
   return true;
 }
@@ -816,9 +824,10 @@ bool RpcServer::f_on_transactions_pool_json(const F_COMMAND_RPC_GET_POOL::reques
     f_transaction_short_response transaction_short;
     uint64_t amount_in = getInputAmount(tx);
     uint64_t amount_out = getOutputAmount(tx);
-
+	uint64_t dust_amount = getDustAmountFromTxExtra(tx.extra);
+	transaction_short.dust_amount = dust_amount;
     transaction_short.hash = Common::podToHex(getObjectHash(tx));
-    transaction_short.fee = amount_in - amount_out;
+    transaction_short.fee = amount_in - amount_out - dust_amount;
     transaction_short.amount_out = amount_out;
     transaction_short.size = getObjectBinarySize(tx);
     res.transactions.push_back(transaction_short);
