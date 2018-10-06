@@ -1628,7 +1628,7 @@ namespace CryptoNote {
 					}
 				}
 				
-				auto splittedDestinationAmounts = splitAmount(destinationAmount, output.receiver, m_currency.defaultDustThreshold(m_node.getLastKnownBlockHeight()));
+				auto splittedDestinationAmounts = clearAndSplitAmount(destinationAmount, output.receiver, m_currency.defaultDustThreshold(m_node.getLastKnownBlockHeight()));
 				newDecomposedOutputs.emplace_back(std::move(splittedDestinationAmounts));
 			}
 			//So what we are doing here is removing all the tiny outs (less than 1000000) and sending them to a specified address - which is just an orfinary wallet
@@ -2660,6 +2660,18 @@ namespace CryptoNote {
 	}
 
 	CryptoNote::WalletGreen::ReceiverAmounts WalletGreen::splitAmount(
+		uint64_t amount,
+		const AccountPublicAddress& destination,
+		uint64_t dustThreshold) {
+
+		ReceiverAmounts receiverAmounts;
+
+		receiverAmounts.receiver = destination;
+		decomposeAmount(amount, dustThreshold, receiverAmounts.amounts);
+		return receiverAmounts;
+	}
+
+	CryptoNote::WalletGreen::ReceiverAmounts WalletGreen::clearAndSplitAmount(
 		uint64_t amount,
 		const AccountPublicAddress& destination,
 		uint64_t dustThreshold) {

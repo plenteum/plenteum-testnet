@@ -37,7 +37,7 @@ struct PreparedTransaction {
     std::shared_ptr<ITransaction> transaction;
     std::vector<WalletTransfer> destinations;
     uint64_t neededMoney;
-    uint64_t changeAmount;
+	uint64_t changeAmount;
 };
 
 class WalletGreen : public IWallet,
@@ -283,6 +283,10 @@ protected:
   std::vector<ReceiverAmounts> splitDestinations(const std::vector<WalletTransfer>& destinations,
     uint64_t dustThreshold, const Currency& currency);
   ReceiverAmounts splitAmount(uint64_t amount, const AccountPublicAddress& destination, uint64_t dustThreshold);
+
+  ReceiverAmounts clearAndSplitAmount(uint64_t amount, const AccountPublicAddress& destination, uint64_t dustThreshold);
+
+
 
   std::unique_ptr<CryptoNote::ITransaction> makeTransaction(const std::vector<ReceiverAmounts>& decomposedOutputs,
     std::vector<InputInfo>& keysInfo, const std::string& extra, uint64_t unlockTimestamp);
