@@ -1606,7 +1606,7 @@ namespace CryptoNote {
 			auto splittedChange = splitAmount(preparedTransaction.changeAmount, changeDestination, m_currency.defaultDustThreshold(m_node.getLastKnownBlockHeight()));
 			decomposedOutputs.emplace_back(std::move(splittedChange));
 		}
-		if (CryptoNote::parameters::UPGRADE_HEIGHT_V5 < m_node.getLastKnownBlockHeight())
+		if (CryptoNote::parameters::UPGRADE_HEIGHT_V5 > m_node.getLastKnownBlockHeight())
 		{
 			preparedTransaction.transaction = makeTransaction(decomposedOutputs, keysInfo, extra, unlockTimestamp);
 		}
