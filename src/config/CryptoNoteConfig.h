@@ -84,6 +84,10 @@ const size_t   CRYPTONOTE_DUSTFUND_BLOB_RESERVED_SIZE		 = 400;
 const size_t   CRYPTONOTE_DISPLAY_DECIMAL_POINT              = 2; // the number of decimal points to display in the wallet and other software
 const size_t   CRYPTONOTE_DUST_DECIMAL_POINT                 = 8; //the decimal places to calculate DUST up to... 
 
+//DustFund Parameters
+const uint64_t CRYPTONOTE_DUST_OUT_LIMIT					 = 1000000; //the limit up to which dust outsshould be removed and contributed back to the dust fund
+const char CRYPTONOTE_DUST_OUT_ADDRESS[]					 = "PLeafjfpaRWEXR4artCAer4yZFzeq5mRrMaLByP7Rkf3FL1URKUrBnP3ppfL6LVgz4hJYwk6DebUxZq6aQKHa8eT5f1ycM7j7d";
+
 const uint64_t MINIMUM_FEE									 = UINT64_C(0); //0
 
 const uint64_t MINIMUM_MIXIN_V1                              = 0;
@@ -144,7 +148,9 @@ const size_t   FUSION_TX_MIN_IN_OUT_COUNT_RATIO              = 4;
 const uint32_t KEY_IMAGE_CHECKING_BLOCK_INDEX                = 0;
 const uint32_t UPGRADE_HEIGHT_V2                             = 1;
 const uint32_t UPGRADE_HEIGHT_V3                             = 2;
-const uint32_t UPGRADE_HEIGHT_V4                             = 3; // Upgrade height for CN-Lite Variant 1 switch.
+const uint32_t UPGRADE_HEIGHT_V4							 = 3; // Upgrade height for CN-Lite Variant 1 switch.
+const uint32_t UPGRADE_HEIGHT_V5							 = 550; // Upgrade height for DustFund V1.
+
 const uint32_t UPGRADE_HEIGHT_CURRENT                        = UPGRADE_HEIGHT_V4;
 const unsigned UPGRADE_VOTING_THRESHOLD                      = 90;               // percent
 const uint32_t UPGRADE_VOTING_WINDOW                         = EXPECTED_NUMBER_OF_BLOCKS_PER_DAY;  // blocks
@@ -159,7 +165,7 @@ const uint64_t FORK_HEIGHTS[] =
     1,
     2,
     3,
-    1000 //first fork to introduce DUST fund - testnet change fork height
+    550 //first fork to introduce DUST fund - testnet change fork height
 };
 
 /* MAKE SURE TO UPDATE THIS VALUE WITH EVERY MAJOR RELEASE BEFORE A FORK */

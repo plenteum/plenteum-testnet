@@ -662,9 +662,6 @@ bool RpcServer::f_on_block_json(const F_COMMAND_RPC_GET_BLOCK_DETAILS::request& 
   res.block.difficulty = m_core.getBlockDifficulty(res.block.height);
   res.block.transactionsCumulativeSize = blkDetails.transactionsCumulativeSize;
   res.block.alreadyGeneratedCoins = std::to_string(blkDetails.alreadyGeneratedCoins);
-  //temp hardcode to see if this fixes serialization 
-  res.block.dustFundAmount = blkDetails.dustFundAmount;
-  res.block.dustFundBalance = blkDetails.dustFundBalance;
   res.block.alreadyGeneratedTransactions = blkDetails.alreadyGeneratedTransactions;
   res.block.reward = block_header.reward;
   res.block.sizeMedian = blkDetails.sizeMedian;
@@ -690,7 +687,6 @@ bool RpcServer::f_on_block_json(const F_COMMAND_RPC_GET_BLOCK_DETAILS::request& 
   transaction_short.hash = Common::podToHex(getObjectHash(blk.baseTransaction));
   transaction_short.fee = 0;
   transaction_short.amount_out = getOutputAmount(blk.baseTransaction);
-  transaction_short.dust_amount = getDustAmountFromTxExtra(blk.baseTransaction.extra);
   transaction_short.size = getObjectBinarySize(blk.baseTransaction);
   res.block.transactions.push_back(transaction_short);
 
@@ -707,13 +703,14 @@ bool RpcServer::f_on_block_json(const F_COMMAND_RPC_GET_BLOCK_DETAILS::request& 
     }
     f_transaction_short_response transaction_short;
     uint64_t amount_in = getInputAmount(tx);
-    uint64_t amount_out = getOutputAmount(tx);
+	uint64_t amount_out = getOutputAmount(tx);
+	uint64_t amount_dust = 0; // getOutputAmount(tx); //DL-TODO
 
-	transaction_short.dust_amount = getDustAmountFromTxExtra(tx.extra);
     transaction_short.hash = Common::podToHex(getObjectHash(tx));
-    transaction_short.fee = amount_in - amount_out - transaction_short.dust_amount; //ensure dust is removed 
-	transaction_short.amount_out = amount_out;
-	
+
+	transaction_short.dust_amount = amount_dust;
+    transaction_short.fee = amount_in - amount_out - amount_dust;
+    transaction_short.amount_out = amount_out;
     transaction_short.size = getObjectBinarySize(tx);
     res.block.transactions.push_back(transaction_short);
 
@@ -782,13 +779,11 @@ bool RpcServer::f_on_transaction_json(const F_COMMAND_RPC_GET_TRANSACTION_DETAIL
 
   uint64_t amount_in = getInputAmount(res.tx);
   uint64_t amount_out = getOutputAmount(res.tx);
-  uint64_t dust_amount = getDustAmountFromTxExtra(res.tx.extra);
-
-  //fetch dust
-  res.txDetails.dust_amount = dust_amount;
+  uint64_t amount_dust = 0; // getOutputAmount(res.tx);//DL-TODO
 
   res.txDetails.hash = Common::podToHex(getObjectHash(res.tx));
-  res.txDetails.fee = amount_in - amount_out - dust_amount;
+  res.txDetails.dust_amount = amount_dust;
+  res.txDetails.fee = amount_in - amount_out - amount_dust;
   if (amount_in == 0)
     res.txDetails.fee = 0;
   res.txDetails.amount_out = amount_out;
@@ -802,12 +797,11 @@ bool RpcServer::f_on_transaction_json(const F_COMMAND_RPC_GET_TRANSACTION_DETAIL
 
   Crypto::Hash paymentId;
   if (CryptoNote::getPaymentIdFromTxExtra(res.tx.extra, paymentId)) {
-	  res.txDetails.paymentId = Common::podToHex(paymentId);
+    res.txDetails.paymentId = Common::podToHex(paymentId);
+  } else {
+    res.txDetails.paymentId = "";
   }
-  else {
-	  res.txDetails.paymentId = "";
-  }
-  
+
   res.status = CORE_RPC_STATUS_OK;
   return true;
 }
@@ -823,11 +817,11 @@ bool RpcServer::f_on_transactions_pool_json(const F_COMMAND_RPC_GET_POOL::reques
   for (const Transaction tx : pool) {
     f_transaction_short_response transaction_short;
     uint64_t amount_in = getInputAmount(tx);
-    uint64_t amount_out = getOutputAmount(tx);
-	uint64_t dust_amount = getDustAmountFromTxExtra(tx.extra);
-	transaction_short.dust_amount = dust_amount;
+	uint64_t amount_out = getOutputAmount(tx);
+	uint64_t amount_dust = 0; // getOutputAmount(tx); DL-TODO:
+
     transaction_short.hash = Common::podToHex(getObjectHash(tx));
-    transaction_short.fee = amount_in - amount_out - dust_amount;
+    transaction_short.fee = amount_in - amount_out - amount_dust;
     transaction_short.amount_out = amount_out;
     transaction_short.size = getObjectBinarySize(tx);
     res.transactions.push_back(transaction_short);

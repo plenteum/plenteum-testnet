@@ -29,7 +29,6 @@
 #define TX_EXTRA_TAG_PUBKEY                 0x01
 #define TX_EXTRA_NONCE                      0x02
 #define TX_EXTRA_MERGE_MINING_TAG           0x03
-#define TX_EXTRA_TAG_DUST_AMOUNT			0x04
 
 #define TX_EXTRA_NONCE_PAYMENT_ID           0x00
 
@@ -40,7 +39,7 @@ struct TransactionExtraPadding {
 };
 
 struct TransactionExtraPublicKey {
-	Crypto::PublicKey publicKey;
+  Crypto::PublicKey publicKey;
 };
 
 struct TransactionExtraNonce {
@@ -52,15 +51,11 @@ struct TransactionExtraMergeMiningTag {
   Crypto::Hash merkleRoot;
 };
 
-struct TransactionExtraDustAmountTag {
-	uint64_t amount;
-};
-
 // tx_extra_field format, except tx_extra_padding and tx_extra_pub_key:
 //   varint tag;
 //   varint size;
 //   varint data[];
-typedef boost::variant<TransactionExtraPadding, TransactionExtraPublicKey, TransactionExtraNonce, TransactionExtraMergeMiningTag, TransactionExtraDustAmountTag> TransactionExtraField;
+typedef boost::variant<TransactionExtraPadding, TransactionExtraPublicKey, TransactionExtraNonce, TransactionExtraMergeMiningTag> TransactionExtraField;
 
 
 
@@ -80,15 +75,12 @@ bool parseTransactionExtra(const std::vector<uint8_t>& tx_extra, std::vector<Tra
 bool writeTransactionExtra(std::vector<uint8_t>& tx_extra, const std::vector<TransactionExtraField>& tx_extra_fields);
 
 Crypto::PublicKey getTransactionPublicKeyFromExtra(const std::vector<uint8_t>& tx_extra);
-uint64_t getDustAmountFromTxExtra(const std::vector<uint8_t>& tx_extra);
 bool addTransactionPublicKeyToExtra(std::vector<uint8_t>& tx_extra, const Crypto::PublicKey& tx_pub_key);
 bool addExtraNonceToTransactionExtra(std::vector<uint8_t>& tx_extra, const BinaryArray& extra_nonce);
 void setPaymentIdToTransactionExtraNonce(BinaryArray& extra_nonce, const Crypto::Hash& payment_id);
 bool getPaymentIdFromTransactionExtraNonce(const BinaryArray& extra_nonce, Crypto::Hash& payment_id);
 bool appendMergeMiningTagToExtra(std::vector<uint8_t>& tx_extra, const TransactionExtraMergeMiningTag& mm_tag);
 bool getMergeMiningTagFromExtra(const std::vector<uint8_t>& tx_extra, TransactionExtraMergeMiningTag& mm_tag);
-bool appendDustAmountTagToExtra(std::vector<uint8_t>& tx_extra, const TransactionExtraDustAmountTag& dustAmount);
-bool getDustAmountTagFromExtra(const std::vector<uint8_t>& tx_extra, TransactionExtraDustAmountTag& dustAmount);
 
 bool createTxExtraWithPaymentId(const std::string& paymentIdString, std::vector<uint8_t>& extra);
 //returns false if payment id is not found or parse error

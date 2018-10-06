@@ -62,8 +62,6 @@ struct CachedBlockInfo {
   uint64_t timestamp;
   uint64_t cumulativeDifficulty;
   uint64_t alreadyGeneratedCoins;
-  uint64_t dustFundAmount; //the amount of dust contributed to the fund for this block
-  uint64_t dustFundBalance; //the cumulative dust fund balance
   uint64_t alreadyGeneratedTransactions;
   uint32_t blockSize;
 
@@ -102,8 +100,7 @@ public:
     const std::vector<CachedTransaction>& cachedTransactions,
     const TransactionValidatorState& validatorState,
     size_t blockSize,
-	  uint64_t generatedCoins,
-	  uint64_t dustFundAmount,
+    uint64_t generatedCoins,
     uint64_t blockDifficulty,
     RawBlock&& rawBlock) override;
 
@@ -145,14 +142,6 @@ public:
 
   uint64_t getAlreadyGeneratedCoins() const override;
   uint64_t getAlreadyGeneratedCoins(uint32_t blockIndex) const override;
-
-  uint64_t getDustFundAmount() const override;
-  uint64_t getDustFundAmount(uint32_t blockIndex) const override;
-
-  uint64_t getDustFundBalance() const override;
-  uint64_t getDustFundBalance(uint32_t blockIndex) const override;
-
-
   uint64_t getAlreadyGeneratedTransactions(uint32_t blockIndex) const override;
   std::vector<uint64_t> getLastUnits(size_t count, uint32_t blockIndex, UseGenesis use,
                                    std::function<uint64_t(const CachedBlockInfo&)> pred) const override;
@@ -323,8 +312,7 @@ uint8_t getBlockMajorVersionForHeight(uint32_t height) const;
     const std::vector<CachedTransaction>& cachedTransactions,
     const TransactionValidatorState& validatorState,
     size_t blockSize,
-	  uint64_t generatedCoins,
-	  uint64_t dustFundAmount,
+    uint64_t generatedCoins,
     uint64_t blockDifficulty,
     RawBlock&& rawBlock);
 };

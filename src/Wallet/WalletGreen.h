@@ -37,7 +37,8 @@ struct PreparedTransaction {
     std::shared_ptr<ITransaction> transaction;
     std::vector<WalletTransfer> destinations;
     uint64_t neededMoney;
-    uint64_t changeAmount;
+	uint64_t changeAmount;
+	uint64_t dustAmount;//DL-TODO
 };
 
 class WalletGreen : public IWallet,

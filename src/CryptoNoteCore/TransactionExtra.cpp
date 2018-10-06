@@ -39,11 +39,8 @@ bool parseTransactionExtra(const std::vector<uint8_t> &transactionExtra, std::ve
   bool seen_tx_extra_tag_pubkey = false;
   bool seen_tx_extra_nonce = false;
   bool seen_tx_extra_merge_mining_tag = false;
-  bool seen_tx_extra_tag_dustamt = false;
 
   try {
-	  //DL-TODO: PROBLEM IS HERE - NOT GETTING CORRECT DUST AMOUNT
-
     MemoryInputStream iss(transactionExtra.data(), transactionExtra.size());
     BinaryInputStreamSerializer ar(iss);
 
@@ -74,18 +71,18 @@ bool parseTransactionExtra(const std::vector<uint8_t> &transactionExtra, std::ve
         break;
       }
 
-	  case TX_EXTRA_TAG_PUBKEY: {
-		  if (seen_tx_extra_tag_pubkey) {
-			  return true;
-		  }
+      case TX_EXTRA_TAG_PUBKEY: {
+        if (seen_tx_extra_tag_pubkey) {
+            return true;
+        }
 
-		  seen_tx_extra_tag_pubkey = true;
+        seen_tx_extra_tag_pubkey = true;
 
-		  TransactionExtraPublicKey extraPk;
-		  ar(extraPk.publicKey, "public_key");
-		  transactionExtraFields.push_back(extraPk);
-		  break;
-	  }
+        TransactionExtraPublicKey extraPk;
+        ar(extraPk.publicKey, "public_key");
+        transactionExtraFields.push_back(extraPk);
+        break;
+      }
 
       case TX_EXTRA_NONCE: {
         if (seen_tx_extra_nonce) {
@@ -105,31 +102,18 @@ bool parseTransactionExtra(const std::vector<uint8_t> &transactionExtra, std::ve
         break;
       }
 
-	  case TX_EXTRA_MERGE_MINING_TAG: {
-		  if (seen_tx_extra_merge_mining_tag) {
-			  break;
-		  }
+      case TX_EXTRA_MERGE_MINING_TAG: {
+        if (seen_tx_extra_merge_mining_tag) {
+            break;
+        }
 
-		  seen_tx_extra_merge_mining_tag = true;
+        seen_tx_extra_merge_mining_tag = true;
 
-		  TransactionExtraMergeMiningTag mmTag;
-		  ar(mmTag, "mm_tag");
-		  transactionExtraFields.push_back(mmTag);
-		  break;
-	  }
-
-	  case TX_EXTRA_TAG_DUST_AMOUNT: {
-		  if (seen_tx_extra_tag_dustamt) {
-			  return true;
-		  }
-
-		  seen_tx_extra_tag_dustamt = true;
-
-		  TransactionExtraDustAmountTag extraDustAmount;
-		  ar(extraDustAmount.amount, "dust_amount");
-		  transactionExtraFields.push_back(extraDustAmount);
-		  break;
-	  }
+        TransactionExtraMergeMiningTag mmTag;
+        ar(mmTag, "mm_tag");
+        transactionExtraFields.push_back(mmTag);
+        break;
+      }
       }
     }
   } catch (std::exception &) {
@@ -162,11 +146,7 @@ struct ExtraSerializerVisitor : public boost::static_visitor<bool> {
   }
 
   bool operator()(const TransactionExtraMergeMiningTag& t) {
-	  return appendMergeMiningTagToExtra(extra, t);
-  }
-
-  bool operator()(const TransactionExtraDustAmountTag& t) {
-	  return appendDustAmountTagToExtra(extra, t);
+    return appendMergeMiningTagToExtra(extra, t);
   }
 };
 
@@ -183,25 +163,14 @@ bool writeTransactionExtra(std::vector<uint8_t>& tx_extra, const std::vector<Tra
 }
 
 PublicKey getTransactionPublicKeyFromExtra(const std::vector<uint8_t>& tx_extra) {
-	std::vector<TransactionExtraField> tx_extra_fields;
-	parseTransactionExtra(tx_extra, tx_extra_fields);
+  std::vector<TransactionExtraField> tx_extra_fields;
+  parseTransactionExtra(tx_extra, tx_extra_fields);
 
-	TransactionExtraPublicKey pub_key_field;
-	if (!findTransactionExtraFieldByType(tx_extra_fields, pub_key_field))
-		return boost::value_initialized<PublicKey>();
+  TransactionExtraPublicKey pub_key_field;
+  if (!findTransactionExtraFieldByType(tx_extra_fields, pub_key_field))
+    return boost::value_initialized<PublicKey>();
 
-	return pub_key_field.publicKey;
-}
-
-uint64_t getDustAmountFromTxExtra(const std::vector<uint8_t>& tx_extra) {
-	std::vector<TransactionExtraField> tx_extra_fields;
-	parseTransactionExtra(tx_extra, tx_extra_fields);
-
-	TransactionExtraDustAmountTag dust_amount_field;
-	if (!findTransactionExtraFieldByType(tx_extra_fields, dust_amount_field))
-		return 0;
-
-	return dust_amount_field.amount;
+  return pub_key_field.publicKey;
 }
 
 bool addTransactionPublicKeyToExtra(std::vector<uint8_t>& tx_extra, const PublicKey& tx_pub_key) {
@@ -231,35 +200,21 @@ bool addExtraNonceToTransactionExtra(std::vector<uint8_t>& tx_extra, const Binar
 }
 
 bool appendMergeMiningTagToExtra(std::vector<uint8_t>& tx_extra, const TransactionExtraMergeMiningTag& mm_tag) {
-	BinaryArray blob;
-	if (!toBinaryArray(mm_tag, blob)) {
-		return false;
-	}
+  BinaryArray blob;
+  if (!toBinaryArray(mm_tag, blob)) {
+    return false;
+  }
 
-	tx_extra.push_back(TX_EXTRA_MERGE_MINING_TAG);
-	std::copy(reinterpret_cast<const uint8_t*>(blob.data()), reinterpret_cast<const uint8_t*>(blob.data() + blob.size()), std::back_inserter(tx_extra));
-	return true;
-}
-
-bool appendDustAmountTagToExtra(std::vector<uint8_t>& tx_extra, const TransactionExtraDustAmountTag& dustAmount) {
-	tx_extra.resize(tx_extra.size() + 1 + sizeof(TransactionExtraDustAmountTag));
-	tx_extra[tx_extra.size() - 1 - sizeof(TransactionExtraDustAmountTag)] = TX_EXTRA_TAG_DUST_AMOUNT;
-	*reinterpret_cast<TransactionExtraDustAmountTag*>(&tx_extra[tx_extra.size() - sizeof(TransactionExtraDustAmountTag)]) = dustAmount;
-	return true;
+  tx_extra.push_back(TX_EXTRA_MERGE_MINING_TAG);
+  std::copy(reinterpret_cast<const uint8_t*>(blob.data()), reinterpret_cast<const uint8_t*>(blob.data() + blob.size()), std::back_inserter(tx_extra));
+  return true;
 }
 
 bool getMergeMiningTagFromExtra(const std::vector<uint8_t>& tx_extra, TransactionExtraMergeMiningTag& mm_tag) {
-	std::vector<TransactionExtraField> tx_extra_fields;
-	parseTransactionExtra(tx_extra, tx_extra_fields);
+  std::vector<TransactionExtraField> tx_extra_fields;
+  parseTransactionExtra(tx_extra, tx_extra_fields);
 
-	return findTransactionExtraFieldByType(tx_extra_fields, mm_tag);
-}
-
-bool getDustAmountTagFromExtra(const std::vector<uint8_t>& tx_extra, TransactionExtraDustAmountTag& dustAmount) {
-	std::vector<TransactionExtraField> tx_extra_fields;
-	parseTransactionExtra(tx_extra, tx_extra_fields);
-
-	return findTransactionExtraFieldByType(tx_extra_fields, dustAmount);
+  return findTransactionExtraFieldByType(tx_extra_fields, mm_tag);
 }
 
 void setPaymentIdToTransactionExtraNonce(std::vector<uint8_t>& extra_nonce, const Hash& payment_id) {

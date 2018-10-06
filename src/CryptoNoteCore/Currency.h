@@ -68,8 +68,6 @@ public:
   size_t blockGrantedFullRewardZoneByBlockVersion(uint8_t blockMajorVersion) const;
   size_t minerTxBlobReservedSize() const { return m_minerTxBlobReservedSize; }
 
-  size_t dustfundBlobReservedSize() const { return m_dustfundBlobReservedSize; }
-
   size_t numberOfDecimalPlaces() const { return m_numberOfDecimalPlaces; }
   size_t numberOfDisplayDecimalPlaces() const { return m_numberOfDisplayDecimalPlaces; }
   uint64_t coin() const { return m_coin; }
@@ -198,8 +196,6 @@ private:
   size_t m_blockGrantedFullRewardZone;
   size_t m_minerTxBlobReservedSize;
 
-  size_t m_dustfundBlobReservedSize;
-
   size_t m_numberOfDecimalPlaces;
   size_t m_numberOfDisplayDecimalPlaces;
   uint64_t m_coin;
@@ -285,7 +281,6 @@ public:
   CurrencyBuilder& zawyDifficultyBlockVersion(uint8_t val) { m_currency.m_zawyDifficultyBlockVersion = val; return *this; }
   CurrencyBuilder& blockGrantedFullRewardZone(size_t val) { m_currency.m_blockGrantedFullRewardZone = val; return *this; }
   CurrencyBuilder& minerTxBlobReservedSize(size_t val) { m_currency.m_minerTxBlobReservedSize = val; return *this; }
-  CurrencyBuilder& dustfundBlobReservedSize(size_t val) { m_currency.m_dustfundBlobReservedSize = val; return *this; }
 
   CurrencyBuilder& numberOfDecimalPlaces(size_t val);
   CurrencyBuilder& numberOfDisplayDecimalPlaces(size_t val);

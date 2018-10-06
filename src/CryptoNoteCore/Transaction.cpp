@@ -61,8 +61,7 @@ namespace CryptoNote {
     virtual PublicKey getTransactionPublicKey() const override;
     virtual uint64_t getUnlockTime() const override;
     virtual bool getPaymentId(Hash& hash) const override;
-	virtual bool getExtraNonce(BinaryArray& nonce) const override;
-	virtual bool getExtraDustAmount(uint64_t& amount) const override;
+    virtual bool getExtraNonce(BinaryArray& nonce) const override;
     virtual BinaryArray getExtra() const override;
 
     // inputs
@@ -92,8 +91,7 @@ namespace CryptoNote {
 
     virtual void setUnlockTime(uint64_t unlockTime) override;
     virtual void setPaymentId(const Hash& hash) override;
-	virtual void setExtraNonce(const BinaryArray& nonce) override;
-	virtual void setExtraDustAmount(uint64_t amount) override;
+    virtual void setExtraNonce(const BinaryArray& nonce) override;
     virtual void appendExtra(const BinaryArray& extraData) override;
 
     // Inputs/Outputs 
@@ -154,8 +152,8 @@ namespace CryptoNote {
   TransactionImpl::TransactionImpl() {   
     CryptoNote::KeyPair txKeys(CryptoNote::generateKeyPair());
 
-	TransactionExtraPublicKey pk = { txKeys.publicKey };
-	extra.set(pk);
+    TransactionExtraPublicKey pk = { txKeys.publicKey };
+    extra.set(pk);
 
     transaction.version = CURRENT_TRANSACTION_VERSION;
     transaction.unlockTime = 0;
@@ -345,19 +343,11 @@ namespace CryptoNote {
   }
 
   void TransactionImpl::setExtraNonce(const BinaryArray& nonce) {
-	  checkIfSigning();
-	  TransactionExtraNonce extraNonce = { nonce };
-	  extra.set(extraNonce);
-	  transaction.extra = extra.serialize();
-	  invalidateHash();
-  }
-
-  void TransactionImpl::setExtraDustAmount(uint64_t amount) {
-	  checkIfSigning();
-	  TransactionExtraDustAmountTag dustAmount = { amount };
-	  extra.set(dustAmount);
-	  transaction.extra = extra.serialize();
-	  invalidateHash();
+    checkIfSigning();
+    TransactionExtraNonce extraNonce = { nonce };
+    extra.set(extraNonce);
+    transaction.extra = extra.serialize();
+    invalidateHash();
   }
 
   void TransactionImpl::appendExtra(const BinaryArray& extraData) {
@@ -367,21 +357,12 @@ namespace CryptoNote {
   }
 
   bool TransactionImpl::getExtraNonce(BinaryArray& nonce) const {
-	  TransactionExtraNonce extraNonce;
-	  if (extra.get(extraNonce)) {
-		  nonce = extraNonce.nonce;
-		  return true;
-	  }
-	  return false;
-  }
-
-  bool TransactionImpl::getExtraDustAmount(uint64_t& dustAmount) const {
-	  TransactionExtraDustAmountTag extraDustAmount;
-	  if (extra.get(extraDustAmount)) {
-		  dustAmount = extraDustAmount.amount;
-		  return true;
-	  }
-	  return false;
+    TransactionExtraNonce extraNonce;
+    if (extra.get(extraNonce)) {
+      nonce = extraNonce.nonce;
+      return true;
+    }
+    return false;
   }
 
   BinaryArray TransactionImpl::getExtra() const {

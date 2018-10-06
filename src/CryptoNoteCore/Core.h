@@ -94,7 +94,6 @@ public:
   virtual size_t getBlockchainTransactionCount() const override;
   virtual size_t getAlternativeBlockCount() const override;
   virtual uint64_t getTotalGeneratedAmount() const override;
-  virtual uint64_t getDustFundBalance() const override;
   virtual std::vector<BlockTemplate> getAlternativeBlocks() const override;
   virtual std::vector<Transaction> getPoolTransactions() const override;
 

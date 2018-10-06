@@ -81,8 +81,6 @@ void CachedBlockInfo::serialize(ISerializer& s) {
   s(blockSize, "block_size");
   s(cumulativeDifficulty, "cumulative_difficulty");
   s(alreadyGeneratedCoins, "already_generated_coins");
-  s(dustFundAmount, "dust_fund_amount");
-  s(dustFundBalance, "dust_fund_balance");
   s(alreadyGeneratedTransactions, "already_generated_transaction_count");
 }
 
@@ -120,7 +118,7 @@ BlockchainCache::BlockchainCache(const std::string& filename, const Currency& cu
 
     std::vector<CachedTransaction> transactions;
     TransactionValidatorState validatorState;
-    doPushBlock(genesisBlock, transactions, validatorState, coinbaseTransactionSize, minerReward, 0, 1, {toBinaryArray(genesisBlock.getBlock())});
+    doPushBlock(genesisBlock, transactions, validatorState, coinbaseTransactionSize, minerReward, 1, {toBinaryArray(genesisBlock.getBlock())});
   } else {
     startIndex = splitBlockIndex;
   }
@@ -131,16 +129,15 @@ BlockchainCache::BlockchainCache(const std::string& filename, const Currency& cu
 void BlockchainCache::pushBlock(const CachedBlock& cachedBlock,
                                 const std::vector<CachedTransaction>& cachedTransactions,
                                 const TransactionValidatorState& validatorState, size_t blockSize,
-	uint64_t generatedCoins, uint64_t dustFundAmount, uint64_t blockDifficulty, RawBlock&& rawBlock) {
+                                uint64_t generatedCoins, uint64_t blockDifficulty, RawBlock&& rawBlock) {
   //we have to call this function from constructor so it has to be non-virtual
-  doPushBlock(cachedBlock, cachedTransactions, validatorState, blockSize, generatedCoins, dustFundAmount, blockDifficulty, std::move(rawBlock));
+  doPushBlock(cachedBlock, cachedTransactions, validatorState, blockSize, generatedCoins, blockDifficulty, std::move(rawBlock));
 }
 
-//DL-TODO: Check where this is used and trace back to pass in correct Dust Fund Amount
 void BlockchainCache::doPushBlock(const CachedBlock& cachedBlock,
                                 const std::vector<CachedTransaction>& cachedTransactions,
                                 const TransactionValidatorState& validatorState, size_t blockSize,
-                                uint64_t generatedCoins, uint64_t dustFundAmount, uint64_t blockDifficulty, RawBlock&& rawBlock) {
+                                uint64_t generatedCoins, uint64_t blockDifficulty, RawBlock&& rawBlock) {
   logger(Logging::DEBUGGING) << "Pushing block " << cachedBlock.getBlockHash() << " at index " << cachedBlock.getBlockIndex();
 
   assert(blockSize > 0);
@@ -148,37 +145,29 @@ void BlockchainCache::doPushBlock(const CachedBlock& cachedBlock,
 
   uint64_t cumulativeDifficulty = 0;
   uint64_t alreadyGeneratedCoins = 0;
-  uint64_t dustFundBalance = 0;
   uint64_t alreadyGeneratedTransactions = 0;
-  //DL-TODO: DustFund AMount & dustFundBalance 
+
   if (getBlockCount() == 0) {
     if (parent != nullptr) {
       cumulativeDifficulty = parent->getCurrentCumulativeDifficulty(cachedBlock.getBlockIndex() - 1);
-	  alreadyGeneratedCoins = parent->getAlreadyGeneratedCoins(cachedBlock.getBlockIndex() - 1);
-	  dustFundAmount = parent->getDustFundAmount(cachedBlock.getBlockIndex()); //DL-TODO: Update this to calc from TX Extra
-	  dustFundBalance = parent->getDustFundBalance(cachedBlock.getBlockIndex() - 1);
+      alreadyGeneratedCoins = parent->getAlreadyGeneratedCoins(cachedBlock.getBlockIndex() - 1);
       alreadyGeneratedTransactions = parent->getAlreadyGeneratedTransactions(cachedBlock.getBlockIndex() - 1);
     }
 
     cumulativeDifficulty += blockDifficulty;
-	alreadyGeneratedCoins += generatedCoins;
-	dustFundBalance += dustFundAmount;
+    alreadyGeneratedCoins += generatedCoins;
     alreadyGeneratedTransactions += cachedTransactions.size() + 1;
   } else {
     auto& lastBlockInfo = blockInfos.get<BlockIndexTag>().back();
 
     cumulativeDifficulty = lastBlockInfo.cumulativeDifficulty + blockDifficulty;
-	alreadyGeneratedCoins = lastBlockInfo.alreadyGeneratedCoins + generatedCoins;
-	//DL-TODO: get DustFund Amount
-	dustFundBalance = lastBlockInfo.dustFundBalance + dustFundAmount;
+    alreadyGeneratedCoins = lastBlockInfo.alreadyGeneratedCoins + generatedCoins;
     alreadyGeneratedTransactions = lastBlockInfo.alreadyGeneratedTransactions + cachedTransactions.size() + 1;
   }
 
   CachedBlockInfo blockInfo;
   blockInfo.blockHash = cachedBlock.getBlockHash();
   blockInfo.alreadyGeneratedCoins = alreadyGeneratedCoins;
-  blockInfo.dustFundAmount = dustFundAmount; //DL-TODO: only add if upgrade height
-  blockInfo.dustFundBalance = dustFundBalance; //DL-TODO: only add if upgrade height
   blockInfo.alreadyGeneratedTransactions = alreadyGeneratedTransactions;
   blockInfo.cumulativeDifficulty = cumulativeDifficulty;
   blockInfo.blockSize = static_cast<uint32_t>(blockSize);
@@ -222,33 +211,21 @@ PushedBlockInfo BlockchainCache::getPushedBlockInfo(uint32_t blockIndex) const {
   PushedBlockInfo pushedBlockInfo;
   pushedBlockInfo.rawBlock = storage->getBlockByIndex(localIndex);
   pushedBlockInfo.blockSize = cachedBlock.blockSize;
-  //DL-TODO: not sure this is right
-  pushedBlockInfo.dustFundAmount = cachedBlock.dustFundAmount;
-  pushedBlockInfo.dustFundBalance = cachedBlock.dustFundBalance;
+
   if (blockIndex > startIndex) {
     const auto& previousBlock = blockInfos.get<BlockIndexTag>()[localIndex - 1];
     pushedBlockInfo.blockDifficulty = cachedBlock.cumulativeDifficulty - previousBlock.cumulativeDifficulty;
-	pushedBlockInfo.generatedCoins = cachedBlock.alreadyGeneratedCoins - previousBlock.alreadyGeneratedCoins;
-	//DL-TODO: check calculations on getting Dust Fund Balance
-	//Add Dust Fund Amount
-	pushedBlockInfo.dustFundAmount = cachedBlock.dustFundAmount;
-	pushedBlockInfo.dustFundBalance = previousBlock.dustFundBalance + pushedBlockInfo.dustFundAmount;
+    pushedBlockInfo.generatedCoins = cachedBlock.alreadyGeneratedCoins - previousBlock.alreadyGeneratedCoins;
   } else {
     if (parent == nullptr) {
       pushedBlockInfo.blockDifficulty = cachedBlock.cumulativeDifficulty;
-	  pushedBlockInfo.generatedCoins = cachedBlock.alreadyGeneratedCoins;
-	  pushedBlockInfo.dustFundAmount = cachedBlock.dustFundAmount;
-	  pushedBlockInfo.dustFundBalance = cachedBlock.dustFundBalance;
+      pushedBlockInfo.generatedCoins = cachedBlock.alreadyGeneratedCoins;
     } else {
       uint64_t cumulativeDifficulty = parent->getLastCumulativeDifficulties(1, startIndex - 1, addGenesisBlock)[0];
-	  uint64_t alreadyGeneratedCoins = parent->getAlreadyGeneratedCoins(startIndex - 1);
-	  uint64_t dustFundAmount = parent->getDustFundAmount(startIndex - 1); //DL:TODO, calc Dust Fund From TX Extra
+      uint64_t alreadyGeneratedCoins = parent->getAlreadyGeneratedCoins(startIndex - 1);
 
       pushedBlockInfo.blockDifficulty = cachedBlock.cumulativeDifficulty - cumulativeDifficulty;
-	  pushedBlockInfo.generatedCoins = cachedBlock.alreadyGeneratedCoins - alreadyGeneratedCoins;
-	  pushedBlockInfo.dustFundAmount = dustFundAmount;
-	  pushedBlockInfo.dustFundBalance = cachedBlock.dustFundBalance + dustFundAmount;
-;
+      pushedBlockInfo.generatedCoins = cachedBlock.alreadyGeneratedCoins - alreadyGeneratedCoins;
     }
   }
 
@@ -982,42 +959,16 @@ uint64_t BlockchainCache::getCurrentCumulativeDifficulty(uint32_t blockIndex) co
 }
 
 uint64_t BlockchainCache::getAlreadyGeneratedCoins() const {
-	return getAlreadyGeneratedCoins(getTopBlockIndex());
+  return getAlreadyGeneratedCoins(getTopBlockIndex());
 }
 
 uint64_t BlockchainCache::getAlreadyGeneratedCoins(uint32_t blockIndex) const {
-	if (blockIndex < startIndex) {
-		assert(parent != nullptr);
-		return parent->getAlreadyGeneratedCoins(blockIndex);
-	}
+  if (blockIndex < startIndex) {
+    assert(parent != nullptr);
+    return parent->getAlreadyGeneratedCoins(blockIndex);
+  }
 
-	return blockInfos.get<BlockIndexTag>().at(blockIndex - startIndex).alreadyGeneratedCoins;
-}
-
-uint64_t BlockchainCache::getDustFundAmount() const {
-	return getDustFundAmount(getTopBlockIndex());
-}
-
-uint64_t BlockchainCache::getDustFundAmount(uint32_t blockIndex) const {
-	if (blockIndex < startIndex) {
-		assert(parent != nullptr);
-		return parent->getDustFundAmount(blockIndex);
-	}
-
-	return blockInfos.get<BlockIndexTag>().at(blockIndex - startIndex).dustFundAmount;
-}
-
-uint64_t BlockchainCache::getDustFundBalance() const {
-	return getDustFundBalance(getTopBlockIndex());
-}
-
-uint64_t BlockchainCache::getDustFundBalance(uint32_t blockIndex) const {
-	if (blockIndex < startIndex) {
-		assert(parent != nullptr);
-		return parent->getDustFundBalance(blockIndex);
-	}
-
-	return blockInfos.get<BlockIndexTag>().at(blockIndex - startIndex).dustFundBalance;
+  return blockInfos.get<BlockIndexTag>().at(blockIndex - startIndex).alreadyGeneratedCoins;
 }
 
 uint64_t BlockchainCache::getAlreadyGeneratedTransactions(uint32_t blockIndex) const {

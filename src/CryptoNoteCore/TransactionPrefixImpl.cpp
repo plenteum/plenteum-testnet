@@ -44,7 +44,6 @@ public:
   // extra
   virtual bool getPaymentId(Hash& paymentId) const override;
   virtual bool getExtraNonce(BinaryArray& nonce) const override;
-  virtual bool getExtraDustAmount(uint64_t& amount) const override;
   virtual BinaryArray getExtra() const override;
 
   // inputs
@@ -202,12 +201,7 @@ BinaryArray TransactionPrefixImpl::getTransactionData() const {
 }
 
 bool TransactionPrefixImpl::getTransactionSecretKey(SecretKey& key) const {
-	return false;
-}
-
-bool TransactionPrefixImpl::getExtraDustAmount(uint64_t& amount) const {
-	amount = m_extra.getDustAmount();
-	return true;
+  return false;
 }
 
 

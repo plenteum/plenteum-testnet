@@ -178,8 +178,6 @@ void serialize(BlockDetails& block, ISerializer& serializer) {
   serializer(block.blockSize, "blockSize");
   serializer(block.transactionsCumulativeSize, "transactionsCumulativeSize");
   serializer(block.alreadyGeneratedCoins, "alreadyGeneratedCoins");
-  serializer(block.dustFundAmount, "dustFundAmount");
-  serializer(block.dustFundBalance, "dustFundBalance");
   serializer(block.alreadyGeneratedTransactions, "alreadyGeneratedTransactions");
   serializer(block.sizeMedian, "sizeMedian");
   /* Some serializers don't support doubles, which causes this to fail and

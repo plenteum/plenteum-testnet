@@ -59,22 +59,14 @@ namespace CryptoNote {
       fields.push_back(value);
     }
 
-	bool getPublicKey(Crypto::PublicKey& pk) const {
-		CryptoNote::TransactionExtraPublicKey extraPk;
-		if (!get(extraPk)) {
-			return false;
-		}
-		pk = extraPk.publicKey;
-		return true;
-	}
-
-	uint64_t getDustAmount() const {
-		CryptoNote::TransactionExtraDustAmountTag extraDustAmount;
-		if (!get(extraDustAmount)) {
-			return false;
-		}
-		return extraDustAmount.amount;
-	}
+    bool getPublicKey(Crypto::PublicKey& pk) const {
+      CryptoNote::TransactionExtraPublicKey extraPk;
+      if (!get(extraPk)) {
+        return false;
+      }
+      pk = extraPk.publicKey;
+      return true;
+    }
 
     std::vector<uint8_t> serialize() const {
       std::vector<uint8_t> extra;
