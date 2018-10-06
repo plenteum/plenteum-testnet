@@ -66,7 +66,7 @@ const BinaryArray& CachedTransaction::getTransactionBinaryArray() const {
 uint64_t CachedTransaction::getTransactionFee() const {
   if (!transactionFee.is_initialized()) {
     uint64_t summaryInputAmount = 0;
-	uint64_t summaryOutputAmount = 0;
+    uint64_t summaryOutputAmount = 0;
     for (auto& out : transaction.outputs) {
       summaryOutputAmount += out.amount;
     }
@@ -80,8 +80,8 @@ uint64_t CachedTransaction::getTransactionFee() const {
         assert(false && "Unknown out type");
       }
     }
-	uint64_t summaryDustAmount = 0;//DL-TODO
-    transactionFee = summaryInputAmount - summaryOutputAmount - summaryDustAmount;
+
+    transactionFee = summaryInputAmount - summaryOutputAmount;
   }
 
   return transactionFee.get();

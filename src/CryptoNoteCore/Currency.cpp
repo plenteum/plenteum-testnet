@@ -291,7 +291,7 @@ namespace CryptoNote {
 		tx.inputs.push_back(in);
 		return true;
 	}
-	//DL-TODO: Check fusion Tx's still work in this instance
+
 	bool Currency::isFusionTransaction(const std::vector<uint64_t>& inputsAmounts, const std::vector<uint64_t>& outputsAmounts, size_t size, uint32_t height) const {
 		if (size > fusionTxMaxSize()) {
 			return false;
@@ -301,7 +301,7 @@ namespace CryptoNote {
 			return false;
 		}
 
-		if (inputsAmounts.size() < outputsAmounts.size() * fusionTxMinInOutCountRatio()) { //DL-TODO: check these calcs now that dust is being removed
+		if (inputsAmounts.size() < outputsAmounts.size() * fusionTxMinInOutCountRatio()) {
 			return false;
 		}
 

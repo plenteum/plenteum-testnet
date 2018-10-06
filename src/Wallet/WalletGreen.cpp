@@ -1606,6 +1606,7 @@ namespace CryptoNote {
 			auto splittedChange = splitAmount(preparedTransaction.changeAmount, changeDestination, m_currency.defaultDustThreshold(m_node.getLastKnownBlockHeight()));
 			decomposedOutputs.emplace_back(std::move(splittedChange));
 		}
+
 		if (CryptoNote::parameters::UPGRADE_HEIGHT_V5 > m_node.getLastKnownBlockHeight())
 		{
 			preparedTransaction.transaction = makeTransaction(decomposedOutputs, keysInfo, extra, unlockTimestamp);
@@ -1613,20 +1614,22 @@ namespace CryptoNote {
 		else {
 			////extract dust from decomposed outs and add new DUST transfer
 			uint64_t dustLimit = CryptoNote::parameters::CRYPTONOTE_DUST_OUT_LIMIT;
-			uint64_t destinationAmount = 0;
+			uint64_t dustAmount = 0;
+			
 			std::vector<ReceiverAmounts> newDecomposedOutputs;
 			for (const auto& output : decomposedOutputs) {
-				destinationAmount = 0;
+				uint64_t destinationAmount = 0;
 				for (auto amount : output.amounts) {
 					if (amount < dustLimit) {
-						preparedTransaction.dustAmount += amount;
+						dustAmount += amount;
 					}
 					else {
 						destinationAmount += amount;
 					}
 				}
-				auto splittedAmounts = splitAmount(destinationAmount, output.receiver, m_currency.defaultDustThreshold(m_node.getLastKnownBlockHeight()));
-				newDecomposedOutputs.emplace_back(std::move(splittedAmounts));
+				
+				auto splittedDestinationAmounts = splitAmount(destinationAmount, output.receiver, m_currency.defaultDustThreshold(m_node.getLastKnownBlockHeight()));
+				newDecomposedOutputs.emplace_back(std::move(splittedDestinationAmounts));
 			}
 			//So what we are doing here is removing all the tiny outs (less than 1000000) and sending them to a specified address - which is just an orfinary wallet
 			//The reason we are using a standard wallet to store all the dust is threefold
@@ -1635,20 +1638,19 @@ namespace CryptoNote {
 			//3. because it keeps our options open for how we progress the emission side of the dust fund for future rewards
 
 			//it also leaves a potential problem in that we have a view key published, but view only wallets can only track incoming Transactions
-			//DL-TODO: ensure that fusion Tx's do not extract DUST
-
+			
 			//create the DUST Destination
-			if (preparedTransaction.dustAmount > 0) {
+			if (dustAmount > 0) {
 				WalletTransfer dustTransfer;
 				dustTransfer.type = WalletTransferType::DUST;
 				AccountPublicAddress dustDestination;
 				std::string dustAddress = std::string(CryptoNote::parameters::CRYPTONOTE_DUST_OUT_ADDRESS);
 				m_currency.parseAccountAddressString(dustAddress, dustDestination);
 				dustTransfer.address = dustAddress;
-				dustTransfer.amount = static_cast<int64_t>(preparedTransaction.dustAmount);
+				dustTransfer.amount = static_cast<int64_t>(dustAmount);
 				preparedTransaction.destinations.emplace_back(std::move(dustTransfer));
 
-				auto splittedDust = splitAmount(preparedTransaction.dustAmount, dustDestination, m_currency.defaultDustThreshold(m_node.getLastKnownBlockHeight()));
+				auto splittedDust = splitAmount(dustAmount, dustDestination, m_currency.defaultDustThreshold(m_node.getLastKnownBlockHeight()));
 				newDecomposedOutputs.emplace_back(std::move(splittedDust));
 			}
 
@@ -2665,6 +2667,7 @@ namespace CryptoNote {
 		ReceiverAmounts receiverAmounts;
 
 		receiverAmounts.receiver = destination;
+		receiverAmounts.amounts.clear(); //clear the amounts before decomposing
 		decomposeAmount(amount, dustThreshold, receiverAmounts.amounts);
 		return receiverAmounts;
 	}

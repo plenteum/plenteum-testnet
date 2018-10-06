@@ -113,7 +113,7 @@ bool get_tx_fee(const Transaction& tx, uint64_t & fee) {
   if (!(amount_in >= amount_out)) {
     return false;
   }
-  //DL-TODO
+
   fee = amount_in - amount_out;
   return true;
 }

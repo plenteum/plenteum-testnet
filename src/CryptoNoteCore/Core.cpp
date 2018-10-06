@@ -622,6 +622,7 @@ std::error_code Core::addBlock(const CachedBlock& cachedBlock, RawBlock&& rawBlo
       logger(Logging::DEBUGGING) << "Failed to validate transaction " << transaction.getTransactionHash() << ": " << transactionValidationResult.message();
       return transactionValidationResult;
     }
+
     cumulativeFee += fee;
   }
 
@@ -1431,7 +1432,6 @@ std::error_code Core::validateSemantic(const Transaction& transaction, uint64_t&
   }
 
   assert(transaction.signatures.size() == transaction.inputs.size());
-  //DL-TODO
   fee = summaryInputAmount - summaryOutputAmount;
   return error::TransactionValidationError::VALIDATION_SUCCESS;
 }

@@ -120,14 +120,13 @@ std::shared_ptr<WalletLegacyEvent> WalletUserTransactionsCache::onTransactionUpd
   }
 
   bool isCoinbase = txInfo.totalAmountIn == 0;
-  uint64_t dust_amount = 0; //DL-TODO: 
+
   if (id == CryptoNote::WALLET_LEGACY_INVALID_TRANSACTION_ID) {
     WalletLegacyTransaction transaction;
     transaction.firstTransferId = WALLET_LEGACY_INVALID_TRANSFER_ID;
     transaction.transferCount = 0;
     transaction.totalAmount = txBalance;
-	//DL-TODO
-	transaction.fee = isCoinbase ? 0 : txInfo.totalAmountIn - txInfo.totalAmountOut;// -dust_amount;
+    transaction.fee = isCoinbase ? 0 : txInfo.totalAmountIn - txInfo.totalAmountOut;
     transaction.sentTime = 0;
     transaction.hash = txInfo.transactionHash;
     transaction.blockHeight = txInfo.blockHeight;
