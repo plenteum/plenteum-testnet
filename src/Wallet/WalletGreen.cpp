@@ -1641,7 +1641,7 @@ namespace CryptoNote {
 				std::string dustAddress = std::string(CryptoNote::parameters::CRYPTONOTE_DUST_OUT_ADDRESS);
 				m_currency.parseAccountAddressString(dustAddress, dustDestination);
 				dustTransfer.address = dustAddress;
-				dustTransfer.amount = static_cast<int64_t>(preparedTransaction.changeAmount);
+				dustTransfer.amount = static_cast<int64_t>(preparedTransaction.dustAmount);
 				preparedTransaction.destinations.emplace_back(std::move(dustTransfer));
 
 				auto splittedDust = splitAmount(preparedTransaction.dustAmount, dustDestination, m_currency.defaultDustThreshold(m_node.getLastKnownBlockHeight()));
