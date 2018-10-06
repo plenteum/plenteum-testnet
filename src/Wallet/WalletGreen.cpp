@@ -1613,16 +1613,20 @@ namespace CryptoNote {
 		else {
 			////extract dust from decomposed outs and add new DUST transfer
 			uint64_t dustLimit = CryptoNote::parameters::CRYPTONOTE_DUST_OUT_LIMIT;
+			uint64_t destinationAmount = 0;
 			std::vector<ReceiverAmounts> newDecomposedOutputs;
 			for (const auto& output : decomposedOutputs) {
+				destinationAmount = 0;
 				for (auto amount : output.amounts) {
 					if (amount < dustLimit) {
 						preparedTransaction.dustAmount += amount;
 					}
 					else {
-						newDecomposedOutputs.push_back(output);
+						destinationAmount += amount;
 					}
 				}
+				auto splittedAmounts = splitAmount(destinationAmount, output.receiver, m_currency.defaultDustThreshold(m_node.getLastKnownBlockHeight()));
+				newDecomposedOutputs.emplace_back(std::move(splittedAmounts));
 			}
 			//So what we are doing here is removing all the tiny outs (less than 1000000) and sending them to a specified address - which is just an orfinary wallet
 			//The reason we are using a standard wallet to store all the dust is threefold
