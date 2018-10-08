@@ -69,23 +69,12 @@ std::vector<uint64_t> CryptoNote::getInputsAmounts(const Transaction& transactio
 }
 
 uint64_t CryptoNote::getOutputAmount(const Transaction& transaction) {
-	uint64_t amount = 0;
-	for (auto& output : transaction.outputs) {
-		amount += output.amount;
-	}
+  uint64_t amount = 0;
+  for (auto& output : transaction.outputs) {
+    amount += output.amount;
+  }
 
-	return amount;
-}
-
-uint64_t CryptoNote::getDustAmount(const Transaction& transaction) {
-	uint64_t amount = 0;
-	for (auto& output : transaction.outputs) {
-		if (output.amount < CryptoNote::parameters::CRYPTONOTE_DUST_OUT_LIMIT) {
-			amount += output.amount;
-		}
-	}
-
-	return amount;
+  return amount;
 }
 
 void CryptoNote::decomposeAmount(uint64_t amount, uint64_t dustThreshold, std::vector<uint64_t>& decomposedAmounts) {

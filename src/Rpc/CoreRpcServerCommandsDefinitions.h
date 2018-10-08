@@ -485,7 +485,6 @@ struct f_transaction_details_response {
   uint64_t mixin;
   uint64_t fee;
   uint64_t amount_out;
-  uint64_t dust_amount;
 
   void serialize(ISerializer &s) {
     KV_MEMBER(hash)
@@ -493,8 +492,7 @@ struct f_transaction_details_response {
     KV_MEMBER(paymentId)
     KV_MEMBER(mixin)
     KV_MEMBER(fee)
-	KV_MEMBER(amount_out)
-	KV_MEMBER(dust_amount)
+    KV_MEMBER(amount_out)
   }
 };
 
@@ -533,7 +531,6 @@ struct f_block_details_response {
   uint64_t effectiveSizeMedian;
   uint64_t transactionsCumulativeSize;
   std::string alreadyGeneratedCoins;
-  uint64_t alreadyAccumulatedDust;
   uint64_t alreadyGeneratedTransactions;
   uint64_t baseReward;
   double penalty;
@@ -556,8 +553,7 @@ struct f_block_details_response {
     KV_MEMBER(sizeMedian)
     KV_MEMBER(effectiveSizeMedian)
     KV_MEMBER(transactionsCumulativeSize)
-	KV_MEMBER(alreadyGeneratedCoins)
-	KV_MEMBER(alreadyAccumulatedDust)
+    KV_MEMBER(alreadyGeneratedCoins)
     KV_MEMBER(alreadyGeneratedTransactions)
     KV_MEMBER(baseReward)
     KV_MEMBER(penalty)

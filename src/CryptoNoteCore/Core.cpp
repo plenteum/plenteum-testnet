@@ -1648,7 +1648,7 @@ namespace CryptoNote {
 				return fee + transaction.getTransactionFee();
 			});
 
-			//DL-TODO: Add Dust Amount
+			
 
 			int64_t emissionChange = getEmissionChange(currency, *chainsLeaves[0], i - 1, cachedBlock, cumulativeSize, cumulativeFee);
 			chainsLeaves[0]->pushBlock(cachedBlock, transactions, spentOutputs, cumulativeSize, emissionChange, currentDifficulty, std::move(rawBlock));
@@ -2101,7 +2101,6 @@ namespace CryptoNote {
 		blockDetails.blockSize = blockBlobSize + blockDetails.transactionsCumulativeSize - coinbaseTransactionSize;
 
 		blockDetails.alreadyGeneratedCoins = segment->getAlreadyGeneratedCoins(blockDetails.index);
-		blockDetails.alreadyAccumulatedDust = segment->getAlreadyAccumulatedDust(blockDetails.index);
 		blockDetails.alreadyGeneratedTransactions = segment->getAlreadyGeneratedTransactions(blockDetails.index);
 
 		uint64_t prevBlockGeneratedCoins = 0;
@@ -2188,12 +2187,6 @@ namespace CryptoNote {
 
 			transactionDetails.size = transactions.back().getTransactionBinaryArray().size();
 			transactionDetails.fee = transactions.back().getTransactionFee();
-			//fetch dust amount on the Tx
-			transactionDetails.dustAmount = 0;
-			if (transactionDetails.blockIndex > CryptoNote::parameters::UPGRADE_HEIGHT_V5) {
-				transactionDetails.dustAmount = transactions.back().getTransactionDustAmount();
-			}
-
 			rawTransaction = transactions.back().getTransaction();
 			transaction = createTransaction(rawTransaction);
 		}
@@ -2203,8 +2196,7 @@ namespace CryptoNote {
 
 			transactionDetails.size = transactionPool->getTransaction(transactionHash).getTransactionBinaryArray().size();
 			transactionDetails.fee = transactionPool->getTransaction(transactionHash).getTransactionFee();
-			//While the Tx is still in the Pool, do not accummulate the dust
-			transactionDetails.dustAmount = 0;
+
 			rawTransaction = transactionPool->getTransaction(transactionHash).getTransaction();
 			transaction = createTransaction(rawTransaction);
 		}

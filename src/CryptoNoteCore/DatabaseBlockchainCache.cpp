@@ -876,17 +876,11 @@ void DatabaseBlockchainCache::pushBlock(const CachedBlock& cachedBlock,
   auto lastBlockInfo = getCachedBlockInfo(getTopBlockIndex());
   auto cumulativeDifficulty = lastBlockInfo.cumulativeDifficulty + blockDifficulty;
   auto alreadyGeneratedCoins = lastBlockInfo.alreadyGeneratedCoins + generatedCoins;
-  auto alreadyAccummulatedDust = lastBlockInfo.alreadyAccumulatedDust;
-  for (const auto& tx : cachedTransactions)
-  {
-	  alreadyAccummulatedDust += tx.getTransactionDustAmount();
-  }
   auto alreadyGeneratedTransactions = lastBlockInfo.alreadyGeneratedTransactions + cachedTransactions.size() + 1;
 
   CachedBlockInfo blockInfo;
   blockInfo.blockHash = cachedBlock.getBlockHash();
   blockInfo.alreadyGeneratedCoins = alreadyGeneratedCoins;
-  blockInfo.alreadyAccumulatedDust = alreadyAccummulatedDust;
   blockInfo.alreadyGeneratedTransactions = alreadyGeneratedTransactions;
   blockInfo.cumulativeDifficulty = cumulativeDifficulty;
   blockInfo.blockSize = static_cast<uint32_t>(blockSize);
@@ -1161,19 +1155,11 @@ CachedBlockInfo DatabaseBlockchainCache::getCachedBlockInfo(uint32_t index) cons
 }
 
 uint64_t DatabaseBlockchainCache::getAlreadyGeneratedCoins() const {
-	return getAlreadyGeneratedCoins(getTopBlockIndex());
+  return getAlreadyGeneratedCoins(getTopBlockIndex());
 }
 
 uint64_t DatabaseBlockchainCache::getAlreadyGeneratedCoins(uint32_t blockIndex) const {
-	return getCachedBlockInfo(blockIndex).alreadyGeneratedCoins;
-}
-
-uint64_t DatabaseBlockchainCache::getAlreadyAccumulatedDust() const {
-	return getAlreadyAccumulatedDust(getTopBlockIndex());
-}
-
-uint64_t DatabaseBlockchainCache::getAlreadyAccumulatedDust(uint32_t blockIndex) const {
-	return getCachedBlockInfo(blockIndex).alreadyAccumulatedDust;
+  return getCachedBlockInfo(blockIndex).alreadyGeneratedCoins;
 }
 
 uint64_t DatabaseBlockchainCache::getAlreadyGeneratedTransactions(uint32_t blockIndex) const {

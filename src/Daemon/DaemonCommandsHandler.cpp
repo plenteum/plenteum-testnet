@@ -32,7 +32,6 @@ std::string printTransactionShortInfo(const CryptoNote::CachedTransaction& trans
 
   ss << "id: " << transaction.getTransactionHash() << std::endl;
   ss << "fee: " << transaction.getTransactionFee() << std::endl;
-  ss << "dust: " << transaction.getTransactionDustAmount() << std::endl;
   ss << "blobSize: " << transaction.getTransactionBinaryArray().size() << std::endl;
 
   return ss.str();

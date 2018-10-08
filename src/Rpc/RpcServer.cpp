@@ -651,7 +651,7 @@ bool RpcServer::f_on_block_json(const F_COMMAND_RPC_GET_BLOCK_DETAILS::request& 
   block_header_response block_header;
   res.block.height = boost::get<BaseInput>(blk.baseTransaction.inputs.front()).blockIndex;
   fill_block_header_response(blk, false, res.block.height, hash, block_header);
-  
+
   res.block.major_version = block_header.major_version;
   res.block.minor_version = block_header.minor_version;
   res.block.timestamp = block_header.timestamp;
@@ -662,7 +662,6 @@ bool RpcServer::f_on_block_json(const F_COMMAND_RPC_GET_BLOCK_DETAILS::request& 
   res.block.difficulty = m_core.getBlockDifficulty(res.block.height);
   res.block.transactionsCumulativeSize = blkDetails.transactionsCumulativeSize;
   res.block.alreadyGeneratedCoins = std::to_string(blkDetails.alreadyGeneratedCoins);
-  res.block.alreadyAccumulatedDust = blkDetails.alreadyAccumulatedDust;
   res.block.alreadyGeneratedTransactions = blkDetails.alreadyGeneratedTransactions;
   res.block.reward = block_header.reward;
   res.block.sizeMedian = blkDetails.sizeMedian;
@@ -777,16 +776,12 @@ bool RpcServer::f_on_transaction_json(const F_COMMAND_RPC_GET_TRANSACTION_DETAIL
 
   uint64_t amount_in = getInputAmount(res.tx);
   uint64_t amount_out = getOutputAmount(res.tx);
-  uint64_t dust_amount = 0;
-  if (res.block.height >= CryptoNote::parameters::UPGRADE_HEIGHT_V5) {
-	  dust_amount = getDustAmount(res.tx);
-  }
+
   res.txDetails.hash = Common::podToHex(getObjectHash(res.tx));
   res.txDetails.fee = amount_in - amount_out;
   if (amount_in == 0)
     res.txDetails.fee = 0;
   res.txDetails.amount_out = amount_out;
-  res.txDetails.dust_amount = dust_amount;
   res.txDetails.size = getObjectBinarySize(res.tx);
 
   uint64_t mixin;

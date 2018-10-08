@@ -62,7 +62,6 @@ struct CachedBlockInfo {
   uint64_t timestamp;
   uint64_t cumulativeDifficulty;
   uint64_t alreadyGeneratedCoins;
-  uint64_t alreadyAccumulatedDust; //DL-TODO: Store accummulated Dust from Tx's
   uint64_t alreadyGeneratedTransactions;
   uint32_t blockSize;
 
@@ -143,9 +142,6 @@ public:
 
   uint64_t getAlreadyGeneratedCoins() const override;
   uint64_t getAlreadyGeneratedCoins(uint32_t blockIndex) const override;
-
-  uint64_t getAlreadyAccumulatedDust() const override;
-  uint64_t getAlreadyAccumulatedDust(uint32_t blockIndex) const override;
   uint64_t getAlreadyGeneratedTransactions(uint32_t blockIndex) const override;
   std::vector<uint64_t> getLastUnits(size_t count, uint32_t blockIndex, UseGenesis use,
                                    std::function<uint64_t(const CachedBlockInfo&)> pred) const override;
