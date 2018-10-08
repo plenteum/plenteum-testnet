@@ -89,8 +89,11 @@ std::ostream& operator<<(std::ostream& os, CryptoNote::WalletTransferType type) 
     os << "DONATION";
     break;
   case CryptoNote::WalletTransferType::CHANGE:
-    os << "CHANGE";
-    break;
+	  os << "CHANGE";
+	  break;
+  case CryptoNote::WalletTransferType::DUST:
+	  os << "DUSTFUND";
+	  break;
   default:
     os << "<UNKNOWN>";
   }

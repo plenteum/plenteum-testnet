@@ -150,5 +150,6 @@ inline bool getBaseTransactionHash(const BaseTransaction& tx, Crypto::Hash& hash
 uint64_t getInputAmount(const Transaction& transaction);
 std::vector<uint64_t> getInputsAmounts(const Transaction& transaction);
 uint64_t getOutputAmount(const Transaction& transaction);
+uint64_t getDustAmount(const Transaction& transaction);
 void decomposeAmount(uint64_t amount, uint64_t dustThreshold, std::vector<uint64_t>& decomposedAmounts);
 }

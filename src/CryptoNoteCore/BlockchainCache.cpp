@@ -81,6 +81,7 @@ void CachedBlockInfo::serialize(ISerializer& s) {
   s(blockSize, "block_size");
   s(cumulativeDifficulty, "cumulative_difficulty");
   s(alreadyGeneratedCoins, "already_generated_coins");
+  s(alreadyAccumulatedDust, "already_accumulated_dust");
   s(alreadyGeneratedTransactions, "already_generated_transaction_count");
 }
 
@@ -145,29 +146,37 @@ void BlockchainCache::doPushBlock(const CachedBlock& cachedBlock,
 
   uint64_t cumulativeDifficulty = 0;
   uint64_t alreadyGeneratedCoins = 0;
+  uint64_t alreadyAccumulatedDust = 0;
   uint64_t alreadyGeneratedTransactions = 0;
-
+  //DL-TODO: get Dust Accumulated on Transactions in Block
   if (getBlockCount() == 0) {
     if (parent != nullptr) {
       cumulativeDifficulty = parent->getCurrentCumulativeDifficulty(cachedBlock.getBlockIndex() - 1);
-      alreadyGeneratedCoins = parent->getAlreadyGeneratedCoins(cachedBlock.getBlockIndex() - 1);
+	  alreadyGeneratedCoins = parent->getAlreadyGeneratedCoins(cachedBlock.getBlockIndex() - 1);
+	  alreadyAccumulatedDust = parent->getAlreadyAccumulatedDust(cachedBlock.getBlockIndex() - 1);
       alreadyGeneratedTransactions = parent->getAlreadyGeneratedTransactions(cachedBlock.getBlockIndex() - 1);
     }
 
     cumulativeDifficulty += blockDifficulty;
-    alreadyGeneratedCoins += generatedCoins;
+	alreadyGeneratedCoins += generatedCoins;
+	alreadyAccumulatedDust = 0;
     alreadyGeneratedTransactions += cachedTransactions.size() + 1;
   } else {
     auto& lastBlockInfo = blockInfos.get<BlockIndexTag>().back();
 
     cumulativeDifficulty = lastBlockInfo.cumulativeDifficulty + blockDifficulty;
     alreadyGeneratedCoins = lastBlockInfo.alreadyGeneratedCoins + generatedCoins;
+	alreadyAccumulatedDust = lastBlockInfo.alreadyAccumulatedDust;
+	for (const auto& tx : cachedTransactions) {
+		alreadyAccumulatedDust += tx.getTransactionDustAmount();
+	}
     alreadyGeneratedTransactions = lastBlockInfo.alreadyGeneratedTransactions + cachedTransactions.size() + 1;
   }
 
   CachedBlockInfo blockInfo;
   blockInfo.blockHash = cachedBlock.getBlockHash();
   blockInfo.alreadyGeneratedCoins = alreadyGeneratedCoins;
+  blockInfo.alreadyAccumulatedDust = alreadyAccumulatedDust;
   blockInfo.alreadyGeneratedTransactions = alreadyGeneratedTransactions;
   blockInfo.cumulativeDifficulty = cumulativeDifficulty;
   blockInfo.blockSize = static_cast<uint32_t>(blockSize);
@@ -215,17 +224,23 @@ PushedBlockInfo BlockchainCache::getPushedBlockInfo(uint32_t blockIndex) const {
   if (blockIndex > startIndex) {
     const auto& previousBlock = blockInfos.get<BlockIndexTag>()[localIndex - 1];
     pushedBlockInfo.blockDifficulty = cachedBlock.cumulativeDifficulty - previousBlock.cumulativeDifficulty;
-    pushedBlockInfo.generatedCoins = cachedBlock.alreadyGeneratedCoins - previousBlock.alreadyGeneratedCoins;
+	pushedBlockInfo.generatedCoins = cachedBlock.alreadyGeneratedCoins - previousBlock.alreadyGeneratedCoins;
+	pushedBlockInfo.accumulatedDust = cachedBlock.alreadyAccumulatedDust - previousBlock.alreadyAccumulatedDust;
+	//DL-TODO: Accumulated Dust
   } else {
     if (parent == nullptr) {
       pushedBlockInfo.blockDifficulty = cachedBlock.cumulativeDifficulty;
-      pushedBlockInfo.generatedCoins = cachedBlock.alreadyGeneratedCoins;
+	  pushedBlockInfo.generatedCoins = cachedBlock.alreadyGeneratedCoins;
+	  pushedBlockInfo.accumulatedDust = 0;
+	  //DL-TODO: Accumulated Dust
     } else {
       uint64_t cumulativeDifficulty = parent->getLastCumulativeDifficulties(1, startIndex - 1, addGenesisBlock)[0];
-      uint64_t alreadyGeneratedCoins = parent->getAlreadyGeneratedCoins(startIndex - 1);
-
+	  uint64_t alreadyGeneratedCoins = parent->getAlreadyGeneratedCoins(startIndex - 1);
+	  uint64_t alreadyAccumulatedDust = parent->getAlreadyAccumulatedDust(startIndex - 1);
+	  //DL-TODO: Accumulated Dust
       pushedBlockInfo.blockDifficulty = cachedBlock.cumulativeDifficulty - cumulativeDifficulty;
-      pushedBlockInfo.generatedCoins = cachedBlock.alreadyGeneratedCoins - alreadyGeneratedCoins;
+	  pushedBlockInfo.generatedCoins = cachedBlock.alreadyGeneratedCoins - alreadyGeneratedCoins;
+	  pushedBlockInfo.accumulatedDust = cachedBlock.alreadyAccumulatedDust - alreadyAccumulatedDust;
     }
   }
 
@@ -959,16 +974,29 @@ uint64_t BlockchainCache::getCurrentCumulativeDifficulty(uint32_t blockIndex) co
 }
 
 uint64_t BlockchainCache::getAlreadyGeneratedCoins() const {
-  return getAlreadyGeneratedCoins(getTopBlockIndex());
+	return getAlreadyGeneratedCoins(getTopBlockIndex());
 }
 
 uint64_t BlockchainCache::getAlreadyGeneratedCoins(uint32_t blockIndex) const {
-  if (blockIndex < startIndex) {
-    assert(parent != nullptr);
-    return parent->getAlreadyGeneratedCoins(blockIndex);
-  }
+	if (blockIndex < startIndex) {
+		assert(parent != nullptr);
+		return parent->getAlreadyGeneratedCoins(blockIndex);
+	}
 
-  return blockInfos.get<BlockIndexTag>().at(blockIndex - startIndex).alreadyGeneratedCoins;
+	return blockInfos.get<BlockIndexTag>().at(blockIndex - startIndex).alreadyGeneratedCoins;
+}
+
+uint64_t BlockchainCache::getAlreadyAccumulatedDust() const {
+	return getAlreadyAccumulatedDust(getTopBlockIndex());
+}
+
+uint64_t BlockchainCache::getAlreadyAccumulatedDust(uint32_t blockIndex) const {
+	if (blockIndex < startIndex) {
+		assert(parent != nullptr);
+		return parent->getAlreadyAccumulatedDust(blockIndex);
+	}
+
+	return blockInfos.get<BlockIndexTag>().at(blockIndex - startIndex).alreadyAccumulatedDust;
 }
 
 uint64_t BlockchainCache::getAlreadyGeneratedTransactions(uint32_t blockIndex) const {

@@ -1633,12 +1633,10 @@ namespace CryptoNote {
 			}
 			//So what we are doing here is removing all the tiny outs (less than 1000000) and sending them to a specified address - which is just an orfinary wallet
 			//The reason we are using a standard wallet to store all the dust is threefold
-			//1. because it leaves open the possibility of being able to trace back users contributions to the dust fund
-			//2. because it does not require changes to the Tx paramaters with a possible risk of an old software version cerating a fork which could wipe the accumulated dust
-			//3. because it keeps our options open for how we progress the emission side of the dust fund for future rewards
+			//1. it leaves open the possibility of being able to trace back users contributions to the dust fund
+			//2. it does not require changes to the Tx paramaters with a possible risk of an old software version cerating a fork which could wipe the accumulated dust
+			//3. it keeps our options open for how we progress the emission side of the dust fund for future rewards
 
-			//it also leaves a potential problem in that we have a view key published, but view only wallets can only track incoming Transactions
-			
 			//create the DUST Destination
 			if (dustAmount > 0) {
 				WalletTransfer dustTransfer;
@@ -2150,8 +2148,6 @@ namespace CryptoNote {
 	size_t WalletGreen::insertBlockchainTransaction(const TransactionInformation& info, int64_t txBalance) {
 		auto& index = m_transactions.get<RandomAccessIndex>();
 
-		uint64_t dust_amount = 0;
-
 		WalletTransaction tx;
 		tx.state = WalletTransactionState::SUCCEEDED;
 		tx.timestamp = info.timestamp;
@@ -2162,9 +2158,7 @@ namespace CryptoNote {
 			tx.fee = 0;
 		}
 		else {
-			//DL-TODO: calculate dust amount
-
-			tx.fee = info.totalAmountIn - info.totalAmountOut - dust_amount; 
+			tx.fee = info.totalAmountIn - info.totalAmountOut; 
 		}
 
 		tx.unlockTime = info.unlockTime;
@@ -2469,8 +2463,7 @@ namespace CryptoNote {
 			m_logger(ERROR, BRIGHT_RED) << "Failed to deserialize created transaction. Transaction hash " << transaction.getTransactionHash();
 			throw std::system_error(make_error_code(error::INTERNAL_WALLET_ERROR), "Failed to deserialize created transaction");
 		}
-		uint64_t dust_amount = 0; //DL-TODO
-		uint64_t fee = transaction.getInputTotalAmount() - transaction.getOutputTotalAmount() - dust_amount;
+		uint64_t fee = transaction.getInputTotalAmount() - transaction.getOutputTotalAmount();
 		size_t transactionId = insertOutgoingTransactionAndPushEvent(transaction.getTransactionHash(), fee, transaction.getExtra(), transaction.getUnlockTime());
 		m_logger(DEBUGGING) << "Transaction added to container, ID " << transactionId <<
 			", hash " << transaction.getTransactionHash() <<
@@ -3449,7 +3442,7 @@ namespace CryptoNote {
 		m_fusionTxsCache.emplace(transactionId, result);
 		return result;
 	}
-	//DL-TODO - check that with changes we are making that Fusion Tx's still work
+	
 	bool WalletGreen::isFusionTransaction(const WalletTransaction& walletTx) const {
 		if (walletTx.fee != 0) {
 			return false;

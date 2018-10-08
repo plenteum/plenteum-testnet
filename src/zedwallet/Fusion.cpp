@@ -36,6 +36,11 @@ size_t makeFusionTransaction(CryptoNote::WalletGreen &wallet,
         }
 
         threshold /= 2;
+		//ensure we keep the threshold above the dust limit for fusion Transactions
+		if (threshold < CryptoNote::parameters::CRYPTONOTE_DUST_OUT_LIMIT && height >= CryptoNote::parameters::UPGRADE_HEIGHT_V5)
+		{
+			threshold = CryptoNote::parameters::CRYPTONOTE_DUST_OUT_LIMIT;
+		}
     }
 
     /* Can't optimize */

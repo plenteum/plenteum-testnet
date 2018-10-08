@@ -85,7 +85,7 @@ const size_t   CRYPTONOTE_DISPLAY_DECIMAL_POINT              = 2; // the number 
 const size_t   CRYPTONOTE_DUST_DECIMAL_POINT                 = 8; //the decimal places to calculate DUST up to... 
 
 //DustFund Parameters
-const uint64_t CRYPTONOTE_DUST_OUT_LIMIT					 = 1000000; //the limit up to which dust outsshould be removed and contributed back to the dust fund
+const uint64_t CRYPTONOTE_DUST_OUT_LIMIT					 = UINT64_C(1000000); //the limit up to which dust outs should be removed and contributed back to the dust fund
 const char CRYPTONOTE_DUST_OUT_ADDRESS[]					 = "PLeafjfpaRWEXR4artCAer4yZFzeq5mRrMaLByP7Rkf3FL1URKUrBnP3ppfL6LVgz4hJYwk6DebUxZq6aQKHa8eT5f1ycM7j7d";
 
 const uint64_t MINIMUM_FEE									 = UINT64_C(0); //0
@@ -112,10 +112,10 @@ const uint64_t DEFAULT_MIXIN_V2                              = MINIMUM_MIXIN_V2;
 const uint64_t DEFAULT_MIXIN_V3                              = MINIMUM_MIXIN_V3;
 
 const uint64_t DEFAULT_DUST_THRESHOLD                        = UINT64_C(0);
-const uint64_t DEFAULT_DUST_THRESHOLD_V2                     = UINT64_C(0);
+const uint64_t DEFAULT_DUST_THRESHOLD_V2					 = UINT64_C(0);
 
 const uint32_t DUST_THRESHOLD_V2_HEIGHT                      = MIXIN_LIMITS_V2_HEIGHT;
-const uint32_t FUSION_DUST_THRESHOLD_HEIGHT_V2               = 1000;
+const uint32_t FUSION_DUST_THRESHOLD_HEIGHT_V2               = 550;
 
 const uint64_t EXPECTED_NUMBER_OF_BLOCKS_PER_DAY             = 24 * 60 * 60 / DIFFICULTY_TARGET;
 const size_t   DIFFICULTY_WINDOW                             = 720;

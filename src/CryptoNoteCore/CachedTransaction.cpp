@@ -30,59 +30,74 @@ CachedTransaction::CachedTransaction(const Transaction& transaction) : transacti
 }
 
 CachedTransaction::CachedTransaction(const BinaryArray& transactionBinaryArray) : transactionBinaryArray(transactionBinaryArray) {
-  if (!fromBinaryArray<Transaction>(transaction, this->transactionBinaryArray.get())) {
-    throw std::runtime_error("CachedTransaction::CachedTransaction(BinaryArray&&), deserealization error.");
-  }
+	if (!fromBinaryArray<Transaction>(transaction, this->transactionBinaryArray.get())) {
+		throw std::runtime_error("CachedTransaction::CachedTransaction(BinaryArray&&), deserealization error.");
+	}
 }
 
 const Transaction& CachedTransaction::getTransaction() const {
-  return transaction;
+	return transaction;
 }
 
 const Crypto::Hash& CachedTransaction::getTransactionHash() const {
-  if (!transactionHash.is_initialized()) {
-    transactionHash = getBinaryArrayHash(getTransactionBinaryArray());
-  }
+	if (!transactionHash.is_initialized()) {
+		transactionHash = getBinaryArrayHash(getTransactionBinaryArray());
+	}
 
-  return transactionHash.get();
+	return transactionHash.get();
 }
 
 const Crypto::Hash& CachedTransaction::getTransactionPrefixHash() const {
-  if (!transactionPrefixHash.is_initialized()) {
-    transactionPrefixHash = getObjectHash(static_cast<const TransactionPrefix&>(transaction));
-  }
+	if (!transactionPrefixHash.is_initialized()) {
+		transactionPrefixHash = getObjectHash(static_cast<const TransactionPrefix&>(transaction));
+	}
 
-  return transactionPrefixHash.get();
+	return transactionPrefixHash.get();
 }
 
 const BinaryArray& CachedTransaction::getTransactionBinaryArray() const {
-  if (!transactionBinaryArray.is_initialized()) {
-    transactionBinaryArray = toBinaryArray(transaction);
-  }
+	if (!transactionBinaryArray.is_initialized()) {
+		transactionBinaryArray = toBinaryArray(transaction);
+	}
 
-  return transactionBinaryArray.get();
+	return transactionBinaryArray.get();
 }
 
 uint64_t CachedTransaction::getTransactionFee() const {
-  if (!transactionFee.is_initialized()) {
-    uint64_t summaryInputAmount = 0;
-    uint64_t summaryOutputAmount = 0;
-    for (auto& out : transaction.outputs) {
-      summaryOutputAmount += out.amount;
-    }
+	if (!transactionFee.is_initialized()) {
+		uint64_t summaryInputAmount = 0;
+		uint64_t summaryOutputAmount = 0;
+		for (auto& out : transaction.outputs) {
+			summaryOutputAmount += out.amount;
+		}
 
-    for (auto& in : transaction.inputs) {
-      if (in.type() == typeid(KeyInput)) {
-        summaryInputAmount += boost::get<KeyInput>(in).amount;
-      } else if (in.type() == typeid(BaseInput)) {
-        return 0;
-      } else {
-        assert(false && "Unknown out type");
-      }
-    }
+		for (auto& in : transaction.inputs) {
+			if (in.type() == typeid(KeyInput)) {
+				summaryInputAmount += boost::get<KeyInput>(in).amount;
+			}
+			else if (in.type() == typeid(BaseInput)) {
+				return 0;
+			}
+			else {
+				assert(false && "Unknown out type");
+			}
+		}
 
-    transactionFee = summaryInputAmount - summaryOutputAmount;
-  }
+		transactionFee = summaryInputAmount - summaryOutputAmount;
+	}
+}
+uint64_t CachedTransaction::getTransactionDustAmount() const {
+	//DL-TODO: if isFusion : return 0;
+	if (!transactionDustAmount.is_initialized()) { //DL-TODO:limit to calc only from dust fund fork height
+		uint64_t summaryDustAmount = 0;
+		for (auto& out : transaction.outputs) {
+			if (out.amount < CryptoNote::parameters::CRYPTONOTE_DUST_OUT_LIMIT) {
+				summaryDustAmount += out.amount;
+			}
+		}
 
-  return transactionFee.get();
+		transactionDustAmount = summaryDustAmount;
+	}
+
+	return transactionDustAmount.get();
 }

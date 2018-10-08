@@ -54,6 +54,7 @@ struct PushedBlockInfo {
   TransactionValidatorState validatorState;
   size_t blockSize;
   uint64_t generatedCoins;
+  uint64_t accumulatedDust;
   uint64_t blockDifficulty;
 };
 
@@ -134,6 +135,9 @@ public:
 
   virtual uint64_t getAlreadyGeneratedCoins() const = 0;
   virtual uint64_t getAlreadyGeneratedCoins(uint32_t blockIndex) const = 0;
+
+  virtual uint64_t getAlreadyAccumulatedDust() const = 0;
+  virtual uint64_t getAlreadyAccumulatedDust(uint32_t blockIndex) const = 0;
 
   virtual uint64_t getAlreadyGeneratedTransactions(uint32_t blockIndex) const = 0;
 

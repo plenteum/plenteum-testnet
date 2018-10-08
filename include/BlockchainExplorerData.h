@@ -68,6 +68,7 @@ struct TransactionDetails {
   Crypto::Hash hash;
   uint64_t size = 0;
   uint64_t fee = 0;
+  uint64_t dustAmount = 0;
   uint64_t totalInputsAmount = 0;
   uint64_t totalOutputsAmount = 0;
   uint64_t mixin = 0;
@@ -99,6 +100,7 @@ struct BlockDetails {
   uint64_t blockSize = 0;
   uint64_t transactionsCumulativeSize = 0;
   uint64_t alreadyGeneratedCoins = 0;
+  uint64_t alreadyAccumulatedDust = 0;
   uint64_t alreadyGeneratedTransactions = 0;
   uint64_t sizeMedian = 0;
   double penalty = 0.0;

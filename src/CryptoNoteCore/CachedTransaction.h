@@ -32,6 +32,7 @@ public:
   const Crypto::Hash& getTransactionPrefixHash() const;
   const BinaryArray& getTransactionBinaryArray() const;
   uint64_t getTransactionFee() const;
+  uint64_t getTransactionDustAmount() const;
 
 private:
   Transaction transaction;
@@ -39,6 +40,7 @@ private:
   mutable boost::optional<Crypto::Hash> transactionHash;
   mutable boost::optional<Crypto::Hash> transactionPrefixHash;
   mutable boost::optional<uint64_t> transactionFee;
+  mutable boost::optional<uint64_t> transactionDustAmount;
 };
 
 }
