@@ -1597,22 +1597,23 @@ namespace CryptoNote {
 		preparedTransaction.changeAmount = foundMoney - preparedTransaction.neededMoney - donationAmount;
 		std::vector<ReceiverAmounts> decomposedOutputs = splitDestinations(preparedTransaction.destinations, m_currency.defaultDustThreshold(m_node.getLastKnownBlockHeight()), m_currency);
 		
-		if (preparedTransaction.changeAmount != 0) {
-			WalletTransfer changeTransfer;
-			changeTransfer.type = WalletTransferType::CHANGE;
-			changeTransfer.address = m_currency.accountAddressAsString(changeDestination);
-			changeTransfer.amount = static_cast<int64_t>(preparedTransaction.changeAmount);
-			preparedTransaction.destinations.emplace_back(std::move(changeTransfer));
-			auto splittedChange = splitAmount(preparedTransaction.changeAmount, changeDestination, m_currency.defaultDustThreshold(m_node.getLastKnownBlockHeight()));
-			decomposedOutputs.emplace_back(std::move(splittedChange));
-		}
-
 		if (CryptoNote::parameters::UPGRADE_HEIGHT_V5 > m_node.getLastKnownBlockHeight())
 		{
+			//add the change back to the original wallet
+			if (preparedTransaction.changeAmount != 0) {
+				WalletTransfer changeTransfer;
+				changeTransfer.type = WalletTransferType::CHANGE;
+				changeTransfer.address = m_currency.accountAddressAsString(changeDestination);
+				changeTransfer.amount = static_cast<int64_t>(preparedTransaction.changeAmount);
+				preparedTransaction.destinations.emplace_back(std::move(changeTransfer));
+				auto splittedChange = splitAmount(preparedTransaction.changeAmount, changeDestination, m_currency.defaultDustThreshold(m_node.getLastKnownBlockHeight()));
+				decomposedOutputs.emplace_back(std::move(splittedChange));
+			}
+
 			preparedTransaction.transaction = makeTransaction(decomposedOutputs, keysInfo, extra, unlockTimestamp);
 		}
 		else {
-			////extract dust from decomposed outs and add new DUST transfer
+			////extract dust from decomposed outs (excluding change) and add new DUST transfer
 			uint64_t dustLimit = CryptoNote::parameters::CRYPTONOTE_DUST_OUT_LIMIT;
 			uint64_t dustAmount = 0;
 			
@@ -1650,6 +1651,18 @@ namespace CryptoNote {
 
 				auto splittedDust = splitAmount(dustAmount, dustDestination, m_currency.defaultDustThreshold(m_node.getLastKnownBlockHeight()));
 				newDecomposedOutputs.emplace_back(std::move(splittedDust));
+			}
+
+			//finally, add the change to return to the original wallet 
+			//we don't extract change from DUST as this would cause major issues for pools where available balance is calculated from the amount sent out
+			if (preparedTransaction.changeAmount != 0) {
+				WalletTransfer changeTransfer;
+				changeTransfer.type = WalletTransferType::CHANGE;
+				changeTransfer.address = m_currency.accountAddressAsString(changeDestination);
+				changeTransfer.amount = static_cast<int64_t>(preparedTransaction.changeAmount);
+				preparedTransaction.destinations.emplace_back(std::move(changeTransfer));
+				auto splittedChange = splitAmount(preparedTransaction.changeAmount, changeDestination, m_currency.defaultDustThreshold(m_node.getLastKnownBlockHeight()));
+				newDecomposedOutputs.emplace_back(std::move(splittedChange));
 			}
 
 			preparedTransaction.transaction = makeTransaction(newDecomposedOutputs, keysInfo, extra, unlockTimestamp);
