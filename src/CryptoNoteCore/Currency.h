@@ -85,7 +85,7 @@ public:
   uint64_t defaultFusionDustThreshold(uint32_t height) const {
       if (height >= CryptoNote::parameters::FUSION_DUST_THRESHOLD_HEIGHT_V2)
       {
-          return CryptoNote::parameters::CRYPTONOTE_DUST_OUT_LIMIT; //when creating fusions, the outputs should never be lower than this amount, as then they will be consumed by dustfund
+          return CryptoNote::parameters::DEFAULT_DUST_THRESHOLD_V2;
       }
 
       return m_defaultDustThreshold;
@@ -227,7 +227,6 @@ private:
   uint32_t m_upgradeHeightV2;
   uint32_t m_upgradeHeightV3;
   uint32_t m_upgradeHeightV4;
-  uint32_t m_upgradeHeightV5;
   unsigned int m_upgradeVotingThreshold;
   uint32_t m_upgradeVotingWindow;
   uint32_t m_upgradeWindow;
@@ -312,7 +311,6 @@ public:
   CurrencyBuilder& upgradeHeightV2(uint32_t val) { m_currency.m_upgradeHeightV2 = val; return *this; }
   CurrencyBuilder& upgradeHeightV3(uint32_t val) { m_currency.m_upgradeHeightV3 = val; return *this; }
   CurrencyBuilder& upgradeHeightV4(uint32_t val) { m_currency.m_upgradeHeightV4 = val; return *this; }
-  CurrencyBuilder& upgradeHeightV5(uint32_t val) { m_currency.m_upgradeHeightV5 = val; return *this; }
   CurrencyBuilder& upgradeVotingThreshold(unsigned int val);
   CurrencyBuilder& upgradeVotingWindow(uint32_t val) { m_currency.m_upgradeVotingWindow = val; return *this; }
   CurrencyBuilder& upgradeWindow(uint32_t val);
