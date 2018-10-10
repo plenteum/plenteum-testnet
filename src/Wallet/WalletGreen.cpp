@@ -1599,7 +1599,7 @@ namespace CryptoNote {
 		preparedTransaction.changeAmount = foundMoney - preparedTransaction.neededMoney - donationAmount;
 
 		std::vector<ReceiverAmounts> decomposedOutputs = splitDestinations(preparedTransaction.destinations, m_currency.defaultDustThreshold(m_node.getLastKnownBlockHeight()), m_currency);
-		if (CryptoNote::parameters::UPGRADE_HEIGHT_V5 < m_node.getLastKnownBlockHeight())
+		if (CryptoNote::parameters::UPGRADE_HEIGHT_V5 > m_node.getLastKnownBlockHeight())
 		{
 			//add the change back to the original wallet
 			if (preparedTransaction.changeAmount != 0) {
