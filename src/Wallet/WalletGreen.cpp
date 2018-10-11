@@ -1634,11 +1634,17 @@ namespace CryptoNote {
 				auto splittedDestinationAmounts = clearAndSplitAmount(destinationAmount, output.receiver, m_currency.defaultDustThreshold(m_node.getLastKnownBlockHeight()));
 				newDecomposedOutputs.emplace_back(std::move(splittedDestinationAmounts));
 			}
-			//So what we are doing here is removing all the tiny outs (less than 1000000) and sending them to a specified address - which is just an orfinary wallet
-			//The reason we are using a standard wallet to store all the dust is threefold
+			//So what we are doing here is removing all the tiny outs (less than 1000000) and sending them to a specified address (wallet)
+			//The reason we are using a standard wallet to store all the dust in the early stages is threefold
 			//1. it leaves open the possibility of being able to trace back users contributions to the dust fund
-			//2. it does not require changes to the Tx paramaters with a possible risk of an old software version cerating a fork which could wipe the accumulated dust
+			//2. it does not require changes to the Tx paramaters with a possible risk of an old software version creating a fork which could wipe the accumulated dust
 			//3. it keeps our options open for how we progress the emission side of the dust fund for future rewards
+
+			//At a later stage we will create a "transfer to dust fund" option in the wallet, which will accept inputs and out them direct to the dust fund, which will store them on the TX itself as a singular amount
+			// blocks will then "accumulate" this amount sequentially
+
+			// not implementing that at this stage as we need to see how the fund grows so we can deterine how to 
+			//handle the emmission from the fund and see whether we might need to create other mechanisms to supliment it's growth
 
 			//create the DUST Destination
 			if (dustAmount > 0) {
@@ -2445,7 +2451,7 @@ namespace CryptoNote {
 
 		throwIfStopped();
 
-		//TODO: remove dust outs, add to extra and
+		//DL-TODO: cannot add to extra as pools modify extra which cocks up storage
 
 		System::RemoteContext<void> relayTransactionContext(m_dispatcher, [this, &cryptoNoteTransaction, &ec, &completion]() {
 			m_node.relayTransaction(cryptoNoteTransaction, [&ec, &completion, this](std::error_code error) {
@@ -2492,7 +2498,7 @@ namespace CryptoNote {
 
 		m_fusionTxsCache.emplace(transactionId, isFusion);
 		pushBackOutgoingTransfers(transactionId, destinations);
-
+		//DL-TODO: strip the dust here and store it on the tx
 		addUnconfirmedTransaction(transaction);
 		Tools::ScopeExit rollbackAddingUnconfirmedTransaction([this, &transaction] {
 			try {

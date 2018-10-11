@@ -37,7 +37,7 @@ const uint8_t ZAWY_DIFFICULTY_DIFFICULTY_BLOCK_VERSION       = 3;
 
 const uint64_t LWMA_2_DIFFICULTY_BLOCK_INDEX                 = 2;
 const uint64_t LWMA_2_DIFFICULTY_BLOCK_INDEX_V2              = 3;
-const uint64_t LWMA_2_DIFFICULTY_BLOCK_INDEX_V3              = 1000; //THIS is the Next Upgrade Height, should match Dustfund Update Height
+const uint64_t LWMA_2_DIFFICULTY_BLOCK_INDEX_V3              = 1500; //THIS is the Next Upgrade Height for dif algo tweak
 
 const uint64_t DIFFICULTY_WINDOW_V3                          = 720;
 const uint64_t DIFFICULTY_BLOCKS_COUNT_V3                    = DIFFICULTY_WINDOW_V3 + 1;
@@ -102,7 +102,7 @@ const uint64_t MAXIMUM_MIXIN_V3                              = 7;
 /* The heights to activate the mixin limits at */
 const uint32_t MIXIN_LIMITS_V1_HEIGHT                        = 0;
 const uint32_t MIXIN_LIMITS_V2_HEIGHT                        = 1;
-const uint32_t MIXIN_LIMITS_V3_HEIGHT                        = 1000; 
+const uint32_t MIXIN_LIMITS_V3_HEIGHT                        = 550; 
 
 /* The mixin to use by default with zedwallet and wallet-service */
 /* DEFAULT_MIXIN_V0 is the mixin used before MIXIN_LIMITS_V1_HEIGHT is started */
@@ -165,11 +165,12 @@ const uint64_t FORK_HEIGHTS[] =
     1,
     2,
     3,
-    550 //first fork to introduce DUST fund - testnet change fork height
+    550, //first fork to introduce DUST fund - testnet change fork height
+	1500 //diff algo update
 };
 
 /* MAKE SURE TO UPDATE THIS VALUE WITH EVERY MAJOR RELEASE BEFORE A FORK */
-const uint64_t SOFTWARE_SUPPORTED_FORK_INDEX                 = 4;
+const uint64_t SOFTWARE_SUPPORTED_FORK_INDEX                 = 5;
 
 const uint64_t FORK_HEIGHTS_SIZE = sizeof(FORK_HEIGHTS) / sizeof(*FORK_HEIGHTS);
 
