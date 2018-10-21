@@ -1,5 +1,6 @@
 // Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 // Copyright (c) 2014-2018, The Monero Project
+// Copyright (c) 2018, The TurtleCoin Developers
 // Copyright (c) 2018, The Plenteum Developers
 // 
 // Please see the included LICENSE file for more information.
@@ -104,61 +105,24 @@ namespace CryptoNote {
 	}
 
 	size_t Currency::difficultyWindowByBlockVersion(uint8_t blockMajorVersion) const {
-		if (blockMajorVersion >= BLOCK_MAJOR_VERSION_3) {
 			return m_difficultyWindow;
-		}
-		else if (blockMajorVersion == BLOCK_MAJOR_VERSION_2) {
-			return CryptoNote::parameters::DIFFICULTY_WINDOW_V2;
-		}
-		else {
-			return CryptoNote::parameters::DIFFICULTY_WINDOW_V1;
-		}
 	}
 
 	size_t Currency::difficultyLagByBlockVersion(uint8_t blockMajorVersion) const {
-		if (blockMajorVersion >= BLOCK_MAJOR_VERSION_3) {
 			return m_difficultyLag;
-		}
-		else if (blockMajorVersion == BLOCK_MAJOR_VERSION_2) {
-			return CryptoNote::parameters::DIFFICULTY_LAG_V2;
-		}
-		else {
-			return CryptoNote::parameters::DIFFICULTY_LAG_V1;
-		}
 	}
 
 	size_t Currency::difficultyCutByBlockVersion(uint8_t blockMajorVersion) const {
-		if (blockMajorVersion >= BLOCK_MAJOR_VERSION_3) {
 			return m_difficultyCut;
-		}
-		else if (blockMajorVersion == BLOCK_MAJOR_VERSION_2) {
-			return CryptoNote::parameters::DIFFICULTY_CUT_V2;
-		}
-		else {
-			return CryptoNote::parameters::DIFFICULTY_CUT_V1;
-		}
 	}
 
 	size_t Currency::difficultyBlocksCountByBlockVersion(uint8_t blockMajorVersion, uint32_t height) const
 	{
-		if (height >= CryptoNote::parameters::LWMA_2_DIFFICULTY_BLOCK_INDEX_V3)
-		{
-			return CryptoNote::parameters::DIFFICULTY_BLOCKS_COUNT_V3;
-		}
-
 		return difficultyWindowByBlockVersion(blockMajorVersion) + difficultyLagByBlockVersion(blockMajorVersion);
 	}
 
 	size_t Currency::blockGrantedFullRewardZoneByBlockVersion(uint8_t blockMajorVersion) const {
-		if (blockMajorVersion >= BLOCK_MAJOR_VERSION_3) {
 			return m_blockGrantedFullRewardZone;
-		}
-		else if (blockMajorVersion == BLOCK_MAJOR_VERSION_2) {
-			return CryptoNote::parameters::CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE_V2;
-		}
-		else {
-			return CryptoNote::parameters::CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE_V1;
-		}
 	}
 
 	uint32_t Currency::upgradeHeight(uint8_t majorVersion) const {
@@ -170,9 +134,6 @@ namespace CryptoNote {
 		}
 		else if (majorVersion == BLOCK_MAJOR_VERSION_4) {
 			return m_upgradeHeightV4;
-		}
-		else if (majorVersion == BLOCK_MAJOR_VERSION_5) {
-			return m_upgradeHeightV5;
 		}
 		else {
 			return static_cast<uint32_t>(-1);
@@ -443,22 +404,16 @@ namespace CryptoNote {
 
 	uint64_t Currency::getNextDifficulty(uint8_t version, uint32_t blockIndex, std::vector<uint64_t> timestamps, std::vector<uint64_t> cumulativeDifficulties) const
 	{
-		if (blockIndex >= CryptoNote::parameters::LWMA_2_DIFFICULTY_BLOCK_INDEX_V3)
-		{
-			return nextDifficultyV5(timestamps, cumulativeDifficulties);
-		}
-		else if (blockIndex >= CryptoNote::parameters::LWMA_2_DIFFICULTY_BLOCK_INDEX_V2)
-		{
-			return nextDifficultyV4(timestamps, cumulativeDifficulties);
-		}
-		else if (blockIndex >= CryptoNote::parameters::LWMA_2_DIFFICULTY_BLOCK_INDEX)
-		{
-			return nextDifficultyV3(timestamps, cumulativeDifficulties);
-		}
-		else
+		if (blockIndex < CryptoNote::parameters::LWMA_2_DIFFICULTY_BLOCK_INDEX)
 		{
 			return nextDifficulty(version, blockIndex, timestamps, cumulativeDifficulties);
 		}
+		else if (blockIndex < CryptoNote::parameters::LWMA_2_DIFFICULTY_BLOCK_INDEX_V2)
+		{
+			return nextDifficultyV3(timestamps, cumulativeDifficulties);
+		}
+
+		return nextDifficultyV4(timestamps, cumulativeDifficulties);
 	}
 
 	uint64_t Currency::nextDifficulty(uint8_t version, uint32_t blockIndex, std::vector<uint64_t> timestamps,
@@ -635,7 +590,6 @@ namespace CryptoNote {
 		case BLOCK_MAJOR_VERSION_2:
 		case BLOCK_MAJOR_VERSION_3:
 		case BLOCK_MAJOR_VERSION_4:
-		case BLOCK_MAJOR_VERSION_5:
 			return checkProofOfWorkV2(block, currentDiffic);
 		}
 

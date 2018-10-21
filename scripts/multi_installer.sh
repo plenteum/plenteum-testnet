@@ -144,8 +144,7 @@ _configure_os() {
     _note "Operating system configuration completed. You're halfway there!"
 }
 
-_note "Plenteum Multi_Installer v1.0 (pepperoni)"
-_colorize green " _______         _   _       _____      _       \n|__   __|       | | | |     / ____|    (_)      \n   | |_   _ _ __| |_| | ___| |     ___  _ _ __  \n   | | | | | '__| __| |/ _ \ |    / _ \| | '_ \ \n   | | |_| | |  | |_| |  __/ |___| (_) | | | | |\n   |_|\__,_|_|   \__|_|\___|\_____\___/|_|_| |_|\n" && echo
+_note "Plenteum Multi_Installer v0.2.1"
 
 _configure_os
 

@@ -437,17 +437,10 @@ uint64_t BlockchainExplorer::getRewardBlocksWindow() {
 }
 
 uint64_t BlockchainExplorer::getFullRewardMaxBlockSize(uint8_t majorVersion) {
-  if (state.load() != INITIALIZED) {
-    throw std::system_error(make_error_code(CryptoNote::error::BlockchainExplorerErrorCodes::NOT_INITIALIZED));
-  }
-
-  if (majorVersion >= BLOCK_MAJOR_VERSION_3) {
-    return parameters::CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE;
-  } else if (majorVersion == BLOCK_MAJOR_VERSION_2) {
-    return parameters::CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE_V2;
-  } else {
-    return parameters::CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE_V1;
-  }
+	if (state.load() != INITIALIZED) {
+		throw std::system_error(make_error_code(CryptoNote::error::BlockchainExplorerErrorCodes::NOT_INITIALIZED));
+	}
+	return parameters::CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE;
 }
 
 bool BlockchainExplorer::isSynchronized() {

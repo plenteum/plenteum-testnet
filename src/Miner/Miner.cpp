@@ -1,5 +1,6 @@
 // Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 // Copyright (c) 2014-2018, The Monero Project
+// Copyright (c) 2018, The TurtleCoin Developers
 // Copyright (c) 2018, The Plenteum Developers
 //
 // Please see the included LICENSE file for more information.
@@ -8,7 +9,7 @@
 
 #include <functional>
 #include <mutex>
-
+#include "Common/StringTools.h"
 #include "crypto/crypto.h"
 #include "CryptoNoteCore/CachedBlock.h"
 #include "CryptoNoteCore/CheckDifficulty.h"
@@ -74,6 +75,8 @@ void Miner::runWorkers(BlockMiningParameters blockMiningParameters, size_t threa
       m_workers.emplace_back(std::unique_ptr<System::RemoteContext<void>> (
         new System::RemoteContext<void>(m_dispatcher, std::bind(&Miner::workerFunc, this, blockMiningParameters.blockTemplate, blockMiningParameters.difficulty, static_cast<uint32_t>(threadCount))))
       );
+
+	  m_logger(Logging::INFO) << "Thread " << i << " started at nonce: " << blockMiningParameters.blockTemplate.nonce;
 
       blockMiningParameters.blockTemplate.nonce++;
     }

@@ -1,5 +1,6 @@
 // Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 // Copyright (c) 2014-2018, The Monero Project
+// Copyright (c) 2018, The TurtleCoin Developers
 // Copyright (c) 2018, The Plenteum Developers
 //
 // Please see the included LICENSE file for more information.
@@ -26,8 +27,7 @@ const uint64_t CRYPTONOTE_BLOCK_FUTURE_TIME_LIMIT            = 3 * DIFFICULTY_TA
 const uint64_t CRYPTONOTE_BLOCK_FUTURE_TIME_LIMIT_V3         = 3 * DIFFICULTY_TARGET;
 const uint64_t CRYPTONOTE_BLOCK_FUTURE_TIME_LIMIT_V4         = 3 * DIFFICULTY_TARGET;
 
-const size_t   BLOCKCHAIN_TIMESTAMP_CHECK_WINDOW             = 20;
-const size_t   BLOCKCHAIN_TIMESTAMP_CHECK_WINDOW_V3          = 11;
+const size_t   BLOCKCHAIN_TIMESTAMP_CHECK_WINDOW             = 11;
 
 // MONEY_SUPPLY - total number coins to be generated
 const uint64_t MONEY_SUPPLY                                  = ((uint64_t)(2100000000000000000)); //21 billion, 2 Decimal places for DUST
@@ -37,10 +37,7 @@ const uint8_t ZAWY_DIFFICULTY_DIFFICULTY_BLOCK_VERSION       = 3;
 
 const uint64_t LWMA_2_DIFFICULTY_BLOCK_INDEX                 = 2;
 const uint64_t LWMA_2_DIFFICULTY_BLOCK_INDEX_V2              = 3;
-const uint64_t LWMA_2_DIFFICULTY_BLOCK_INDEX_V3              = 1500; //THIS is the Next Upgrade Height for dif algo tweak
 
-const uint64_t DIFFICULTY_WINDOW_V3                          = 720;
-const uint64_t DIFFICULTY_BLOCKS_COUNT_V3                    = DIFFICULTY_WINDOW_V3 + 1;
 
 const unsigned EMISSION_SPEED_FACTOR                         = 22;
 static_assert(EMISSION_SPEED_FACTOR <= 8 * sizeof(uint64_t), "Bad EMISSION_SPEED_FACTOR");
@@ -69,6 +66,7 @@ Plenteumd --print-genesis-tx --genesis-block-reward-address PLEv2Fyavy8CXG8BPEbN
 
 */
 const char GENESIS_COINBASE_TX_HEX[]						 = "011401ff00018080d5d58c8fa15d0299022655a2b02597280d6f306c8e1179cf86e41efc58e9d5879d954c5e7102e621010a11b7dcad444ce6b3f0e50beae6ae7e0d9d318d7f39b1d78f20809ba3aab5fc";
+
 /* This is the unix timestamp of the first "mined" block (technically block 2, not the genesis block)
    You can get this value by doing "print_block 2" in Plenteumd. It is used to know what timestamp
    to import from when the block height cannot be found in the node or the node is offline. */
@@ -76,11 +74,8 @@ const uint64_t GENESIS_BLOCK_TIMESTAMP                       = 0;
 
 const size_t   CRYPTONOTE_REWARD_BLOCKS_WINDOW               = 100;
 const size_t   CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE     = 10000; //size of block (bytes) after which reward for block calculated using block size
-const size_t   CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE_V2  = 20000;
-const size_t   CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE_V1  = 10000;
 const size_t   CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE_CURRENT = CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE;
-const size_t   CRYPTONOTE_COINBASE_BLOB_RESERVED_SIZE		 = 600;
-const size_t   CRYPTONOTE_DUSTFUND_BLOB_RESERVED_SIZE		 = 400;
+const size_t   CRYPTONOTE_COINBASE_BLOB_RESERVED_SIZE        = 600;
 const size_t   CRYPTONOTE_DISPLAY_DECIMAL_POINT              = 2; // the number of decimal points to display in the wallet and other software
 const size_t   CRYPTONOTE_DUST_DECIMAL_POINT                 = 8; //the decimal places to calculate DUST up to... 
 
@@ -90,43 +85,28 @@ const char CRYPTONOTE_DUST_OUT_ADDRESS[]					 = "PLeafjfpaRWEXR4artCAer4yZFzeq5m
 
 const uint64_t MINIMUM_FEE									 = UINT64_C(0); //0
 
-const uint64_t MINIMUM_MIXIN_V1                              = 0;
-const uint64_t MAXIMUM_MIXIN_V1                              = 7;
-
-const uint64_t MINIMUM_MIXIN_V2                              = 0;
-const uint64_t MAXIMUM_MIXIN_V2                              = 7;
-
-const uint64_t MINIMUM_MIXIN_V3                              = 0;
-const uint64_t MAXIMUM_MIXIN_V3                              = 7;
+const uint64_t MINIMUM_MIXIN                              = 0;
+const uint64_t MAXIMUM_MIXIN                              = 7;
 
 /* The heights to activate the mixin limits at */
 const uint32_t MIXIN_LIMITS_V1_HEIGHT                        = 0;
 const uint32_t MIXIN_LIMITS_V2_HEIGHT                        = 1;
-const uint32_t MIXIN_LIMITS_V3_HEIGHT                        = 550; 
 
 /* The mixin to use by default with zedwallet and wallet-service */
 /* DEFAULT_MIXIN_V0 is the mixin used before MIXIN_LIMITS_V1_HEIGHT is started */
-const uint64_t DEFAULT_MIXIN_V0                              = 3;
-const uint64_t DEFAULT_MIXIN_V1                              = MINIMUM_MIXIN_V1;
-const uint64_t DEFAULT_MIXIN_V2                              = MINIMUM_MIXIN_V2;
-const uint64_t DEFAULT_MIXIN_V3                              = MINIMUM_MIXIN_V3;
+const uint64_t DEFAULT_MIXIN								 = MINIMUM_MIXIN;
 
 const uint64_t DEFAULT_DUST_THRESHOLD                        = UINT64_C(0);
-const uint64_t DEFAULT_DUST_THRESHOLD_V2					 = UINT64_C(0);
+const uint64_t DEFAULT_DUST_THRESHOLD_V2                     = UINT64_C(0);
 
-const uint32_t DUST_THRESHOLD_V2_HEIGHT                      = MIXIN_LIMITS_V2_HEIGHT;
-const uint32_t FUSION_DUST_THRESHOLD_HEIGHT_V2               = 550;
+const uint32_t DUST_THRESHOLD_V2_HEIGHT                      = 1;
+const uint32_t FUSION_DUST_THRESHOLD_HEIGHT_V2               = 200;
 
 const uint64_t EXPECTED_NUMBER_OF_BLOCKS_PER_DAY             = 24 * 60 * 60 / DIFFICULTY_TARGET;
 const size_t   DIFFICULTY_WINDOW                             = 720;
-const size_t   DIFFICULTY_WINDOW_V1                          = 720;
-const size_t   DIFFICULTY_WINDOW_V2                          = 720;
 const size_t   DIFFICULTY_CUT                                = 60;  // timestamps to cut after sorting
-const size_t   DIFFICULTY_CUT_V1                             = 60;
-const size_t   DIFFICULTY_CUT_V2                             = 60;
 const size_t   DIFFICULTY_LAG                                = 15;  // !!!
-const size_t   DIFFICULTY_LAG_V1                             = 15;
-const size_t   DIFFICULTY_LAG_V2                             = 15;
+const uint64_t DIFFICULTY_BLOCKS_COUNT						 = DIFFICULTY_WINDOW + 1;
 static_assert(2 * DIFFICULTY_CUT <= DIFFICULTY_WINDOW - 2, "Bad DIFFICULTY_WINDOW or DIFFICULTY_CUT");
 
 const size_t   MAX_BLOCK_SIZE_INITIAL                        = 100000;
@@ -148,8 +128,8 @@ const size_t   FUSION_TX_MIN_IN_OUT_COUNT_RATIO              = 4;
 const uint32_t KEY_IMAGE_CHECKING_BLOCK_INDEX                = 0;
 const uint32_t UPGRADE_HEIGHT_V2                             = 1;
 const uint32_t UPGRADE_HEIGHT_V3                             = 2;
-const uint32_t UPGRADE_HEIGHT_V4							 = 3; // Upgrade height for CN-Lite Variant 1 switch.
-const uint32_t UPGRADE_HEIGHT_V5							 = 550; // Upgrade height for DustFund V1.
+const uint32_t UPGRADE_HEIGHT_V4                             = 3; // Upgrade height for CN-Lite Variant 1 switch.
+const uint32_t UPGRADE_HEIGHT_V5							 = 200; // Upgrade height for DustFund V1.
 
 const uint32_t UPGRADE_HEIGHT_CURRENT                        = UPGRADE_HEIGHT_V5;
 const unsigned UPGRADE_VOTING_THRESHOLD                      = 90;               // percent
@@ -165,8 +145,8 @@ const uint64_t FORK_HEIGHTS[] =
     1,
     2,
     3,
-    550, //first fork to introduce DUST fund - testnet change fork height
-	1500 //diff algo update
+    200, //first fork to introduce DUST fund
+	100000 //difficulty update and web wallet direct connect
 };
 
 /* MAKE SURE TO UPDATE THIS VALUE WITH EVERY MAJOR RELEASE BEFORE A FORK */
@@ -176,7 +156,7 @@ const uint64_t FORK_HEIGHTS_SIZE = sizeof(FORK_HEIGHTS) / sizeof(*FORK_HEIGHTS);
 
 /* The index in the FORK_HEIGHTS array that this version of the software will
    support. For example, if CURRENT_FORK_INDEX is 4, this version of the
-   software will support the fork at 500 blocks.
+   software will support the fork at 200 blocks.
 
    This will default to zero if the FORK_HEIGHTS array is empty, so you don't
    need to change it manually. */
@@ -201,8 +181,7 @@ const uint8_t  CURRENT_TRANSACTION_VERSION                   =  TRANSACTION_VERS
 const uint8_t  BLOCK_MAJOR_VERSION_1                         =  0;
 const uint8_t  BLOCK_MAJOR_VERSION_2                         =  1;
 const uint8_t  BLOCK_MAJOR_VERSION_3                         =  2;
-const uint8_t  BLOCK_MAJOR_VERSION_4						 =  3;
-const uint8_t  BLOCK_MAJOR_VERSION_5						 =  4;
+const uint8_t  BLOCK_MAJOR_VERSION_4                         =  3;
 const uint8_t  BLOCK_MINOR_VERSION_0                         =  0;
 const uint8_t  BLOCK_MINOR_VERSION_1                         =  1;
 
@@ -210,8 +189,8 @@ const size_t   BLOCKS_IDS_SYNCHRONIZING_DEFAULT_COUNT        =  10000;  //by def
 const size_t   BLOCKS_SYNCHRONIZING_DEFAULT_COUNT            =  100;    //by default, blocks count in blocks downloading
 const size_t   COMMAND_RPC_GET_BLOCKS_FAST_MAX_COUNT         =  1000;
 
-const int      P2P_DEFAULT_PORT                              =  44025; //testnet- change default ports
-const int      RPC_DEFAULT_PORT                              =  44026;//testnet-change default ports
+const int      P2P_DEFAULT_PORT                              =  44025;
+const int      RPC_DEFAULT_PORT                              =  44026;
 const int      SERVICE_DEFAULT_PORT                          =  8070;
 
 const size_t   P2P_LOCAL_WHITE_PEERLIST_LIMIT                =  1000;
@@ -247,7 +226,6 @@ const static boost::uuids::uuid CRYPTONOTE_NETWORK =
 
 const char* const SEED_NODES[] = {
   //add seed nodes
-  "104.248.169.217:44025", //DO-Seed4
   "206.189.124.145:44025", //DO-Seed2
 };
 } // CryptoNote

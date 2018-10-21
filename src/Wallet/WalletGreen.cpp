@@ -1,5 +1,6 @@
 // Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 // Copyright (c) 2014-2018, The Monero Project
+// Copyright (c) 2018, The TurtleCoin Developers
 // Copyright (c) 2018, The Plenteum Developers
 // 
 // Please see the included LICENSE file for more information.
@@ -37,7 +38,6 @@
 #include "CryptoNoteCore/TransactionApi.h"
 #include "crypto/crypto.h"
 #include "Transfers/TransfersContainer.h"
-#include "WalletSerializationV1.h"
 #include "WalletSerializationV2.h"
 #include "WalletErrors.h"
 #include "WalletUtils.h"
@@ -472,16 +472,12 @@ namespace CryptoNote {
 			throw std::system_error(make_error_code(error::WRONG_VERSION), "Failed to read wallet version");
 		}
 
-		if (version < WalletSerializerV2::MIN_VERSION) {
-			convertAndLoadWalletFile(path, std::move(walletFileStream));
+		if (version < WalletSerializerV2::MIN_VERSION || version > WalletSerializerV2::SERIALIZATION_VERSION) {
+			m_logger(ERROR, BRIGHT_RED) << "Unsupported wallet version: " << version;
+			throw std::system_error(make_error_code(error::WRONG_VERSION), "Unsupported wallet version");
 		}
 		else {
 			walletFileStream.close();
-
-			if (version > WalletSerializerV2::SERIALIZATION_VERSION) {
-				m_logger(ERROR, BRIGHT_RED) << "Unsupported wallet version: " << version;
-				throw std::system_error(make_error_code(error::WRONG_VERSION), "Unsupported wallet version");
-			}
 
 			loadContainerStorage(path);
 			subscribeWallets();
@@ -514,7 +510,28 @@ namespace CryptoNote {
 				}
 			}
 		}
-
+		// Read all output keys cache
+		try {
+			std::vector<AccountPublicAddress> subscriptionList;
+			m_synchronizer.getSubscriptions(subscriptionList);
+			for (auto& addr : subscriptionList) {
+				auto sub = m_synchronizer.getSubscription(addr);
+				if (sub != nullptr) {
+					std::vector<TransactionOutputInformation> allTransfers;
+					ITransfersContainer* container = &sub->getContainer();
+					container->getOutputs(allTransfers, ITransfersContainer::IncludeAll);
+					m_logger(INFO, BRIGHT_WHITE) << "Known Transfers " << allTransfers.size();
+					for (auto& o : allTransfers) {
+						if (o.type == TransactionTypes::OutputType::Key) {
+							m_synchronizer.addPublicKeysSeen(addr, o.transactionHash, o.outputKey);
+						}
+					}
+				}
+			}
+		}
+		catch (const std::exception& e) {
+			m_logger(ERROR, BRIGHT_RED) << "Failed to read output keys!! Continue without output keys: " << e.what();
+		}
 		m_blockchainSynchronizer.addObserver(this);
 
 		initTransactionPool();
@@ -832,68 +849,6 @@ namespace CryptoNote {
 
 			throw;
 		}
-	}
-
-	void WalletGreen::convertAndLoadWalletFile(const std::string& path, std::ifstream&& walletFileStream) {
-		WalletSerializerV1 s(
-			*this,
-			m_viewPublicKey,
-			m_viewSecretKey,
-			m_actualBalance,
-			m_pendingBalance,
-			m_walletsContainer,
-			m_synchronizer,
-			m_unlockTransactionsJob,
-			m_transactions,
-			m_transfers,
-			m_uncommitedTransactions,
-			m_transactionSoftLockTime
-		);
-
-		StdInputStream stream(walletFileStream);
-		s.load(m_key, stream);
-		walletFileStream.close();
-
-		boost::filesystem::path bakPath = path + ".backup";
-		boost::filesystem::path tmpPath = boost::filesystem::unique_path(path + ".tmp.%%%%-%%%%");
-
-		if (boost::filesystem::exists(bakPath)) {
-			throw std::system_error(make_error_code(std::errc::file_exists), ".backup file already exists");
-		}
-
-		Tools::ScopeExit tmpFileDeleter([&tmpPath] {
-			boost::system::error_code ignore;
-			boost::filesystem::remove(tmpPath, ignore);
-		});
-
-		m_containerStorage.open(tmpPath.string(), Common::FileMappedVectorOpenMode::CREATE, sizeof(ContainerStoragePrefix));
-		ContainerStoragePrefix* prefix = reinterpret_cast<ContainerStoragePrefix*>(m_containerStorage.prefix());
-		prefix->version = WalletSerializerV2::SERIALIZATION_VERSION;
-		prefix->nextIv = Crypto::rand<Crypto::chacha8_iv>();
-
-		uint64_t creationTimestamp = time(nullptr);
-		prefix->encryptedViewKeys = encryptKeyPair(m_viewPublicKey, m_viewSecretKey, creationTimestamp);
-
-		for (auto spendKeys : m_walletsContainer.get<RandomAccessIndex>()) {
-			m_containerStorage.push_back(encryptKeyPair(spendKeys.spendPublicKey, spendKeys.spendSecretKey, spendKeys.creationTimestamp));
-			incNextIv();
-		}
-
-		saveWalletCache(m_containerStorage, m_key, WalletSaveLevel::SAVE_ALL, "");
-
-		boost::filesystem::rename(path, bakPath);
-		std::error_code ec;
-		m_containerStorage.rename(path, ec);
-		if (ec) {
-			m_logger(ERROR, BRIGHT_RED) << "Failed to rename " << tmpPath << " to " << path;
-
-			boost::system::error_code ignore;
-			boost::filesystem::rename(bakPath, path, ignore);
-			throw std::system_error(ec, "Failed to replace wallet file");
-		}
-
-		tmpFileDeleter.cancel();
-		m_logger(INFO, BRIGHT_WHITE) << "Wallet file converted! Previous version: " << bakPath;
 	}
 
 	void WalletGreen::changePassword(const std::string& oldPassword, const std::string& newPassword) {
@@ -1280,9 +1235,7 @@ namespace CryptoNote {
 		/* Take the amount of time a block can potentially be in the past/future */
 		std::initializer_list<uint64_t> limits =
 		{
-			CryptoNote::parameters::CRYPTONOTE_BLOCK_FUTURE_TIME_LIMIT,
-			CryptoNote::parameters::CRYPTONOTE_BLOCK_FUTURE_TIME_LIMIT_V3,
-			CryptoNote::parameters::CRYPTONOTE_BLOCK_FUTURE_TIME_LIMIT_V4
+			CryptoNote::parameters::CRYPTONOTE_BLOCK_FUTURE_TIME_LIMIT
 		};
 
 		/* Get the largest adjustment possible */
@@ -1634,17 +1587,11 @@ namespace CryptoNote {
 				auto splittedDestinationAmounts = clearAndSplitAmount(destinationAmount, output.receiver, m_currency.defaultDustThreshold(m_node.getLastKnownBlockHeight()));
 				newDecomposedOutputs.emplace_back(std::move(splittedDestinationAmounts));
 			}
-			//So what we are doing here is removing all the tiny outs (less than 1000000) and sending them to a specified address (wallet)
-			//The reason we are using a standard wallet to store all the dust in the early stages is threefold
+			//So what we are doing here is removing all the tiny outs (less than 1000000) and sending them to a specified address - which is just an orfinary wallet
+			//The reason we are using a standard wallet to store all the dust is threefold
 			//1. it leaves open the possibility of being able to trace back users contributions to the dust fund
-			//2. it does not require changes to the Tx paramaters with a possible risk of an old software version creating a fork which could wipe the accumulated dust
+			//2. it does not require changes to the Tx paramaters with a possible risk of an old software version cerating a fork which could wipe the accumulated dust
 			//3. it keeps our options open for how we progress the emission side of the dust fund for future rewards
-
-			//At a later stage we will create a "transfer to dust fund" option in the wallet, which will accept inputs and out them direct to the dust fund, which will store them on the TX itself as a singular amount
-			// blocks will then "accumulate" this amount sequentially
-
-			// not implementing that at this stage as we need to see how the fund grows so we can deterine how to 
-			//handle the emmission from the fund and see whether we might need to create other mechanisms to supliment it's growth
 
 			//create the DUST Destination
 			if (dustAmount > 0) {
@@ -2451,7 +2398,7 @@ namespace CryptoNote {
 
 		throwIfStopped();
 
-		//DL-TODO: cannot add to extra as pools modify extra which cocks up storage
+		//TODO: remove dust outs, add to extra and
 
 		System::RemoteContext<void> relayTransactionContext(m_dispatcher, [this, &cryptoNoteTransaction, &ec, &completion]() {
 			m_node.relayTransaction(cryptoNoteTransaction, [&ec, &completion, this](std::error_code error) {
@@ -2498,7 +2445,7 @@ namespace CryptoNote {
 
 		m_fusionTxsCache.emplace(transactionId, isFusion);
 		pushBackOutgoingTransfers(transactionId, destinations);
-		//DL-TODO: strip the dust here and store it on the tx
+
 		addUnconfirmedTransaction(transaction);
 		Tools::ScopeExit rollbackAddingUnconfirmedTransaction([this, &transaction] {
 			try {

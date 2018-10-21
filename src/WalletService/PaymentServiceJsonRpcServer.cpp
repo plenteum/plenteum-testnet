@@ -1,5 +1,6 @@
 // Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 // Copyright (c) 2014-2018, The Monero Project
+// Copyright (c) 2018, The TurtleCoin Developers
 // Copyright (c) 2018, The Plenteum Developers
 // 
 // Please see the included LICENSE file for more information.
@@ -8,6 +9,8 @@
 
 #include <functional>
 
+#include <CryptoTypes.h>
+#include "crypto/hash.h"
 #include "PaymentServiceJsonRpcMessages.h"
 #include "WalletService.h"
 
@@ -67,7 +70,11 @@ void PaymentServiceJsonRpcServer::processJsonRpcRequest(const Common::JsonValue&
         return;
       }
       clientPassword = req("password").getString();
-      if (clientPassword != config.rpcPassword) {
+
+	  std::vector<uint8_t> rawData(clientPassword.begin(), clientPassword.end());
+	  Crypto::Hash hashedPassword = Crypto::Hash();
+	  cn_slow_hash_v0(rawData.data(), rawData.size(), hashedPassword);
+	  if (hashedPassword != config.rpcPassword) {
         makeInvalidPasswordResponse(resp);
         return;
       }
@@ -117,11 +124,7 @@ std::error_code PaymentServiceJsonRpcServer::handleExport(const Export::Request&
 }
 
 std::error_code PaymentServiceJsonRpcServer::handleReset(const Reset::Request& request, Reset::Response& response) {
-  if (request.viewSecretKey.empty()) {
     return service.resetWallet(request.scanHeight);
-  } else {
-    return service.replaceWithNewWallet(request.viewSecretKey, request.scanHeight, request.newAddress);
-  }
 }
 
 std::error_code PaymentServiceJsonRpcServer::handleCreateAddress(const CreateAddress::Request& request, CreateAddress::Response& response) {
