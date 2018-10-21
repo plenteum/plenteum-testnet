@@ -65,7 +65,7 @@ Plenteumd --print-genesis-tx --genesis-block-reward-address PLEv2Fyavy8CXG8BPEbN
 * You should see your premine appear in the previously generated wallet.
 
 */
-const char GENESIS_COINBASE_TX_HEX[]						 = "011401ff00018080d5d58c8fa15d0299022655a2b02597280d6f306c8e1179cf86e41efc58e9d5879d954c5e7102e621010a11b7dcad444ce6b3f0e50beae6ae7e0d9d318d7f39b1d78f20809ba3aab5fc";
+const char GENESIS_COINBASE_TX_HEX[]						 = "011401ff00018080d5d58c8fa15d02cb36419ab0e1708b9d5f974a2f134d211a367cd1d29ca4be6f1b38ec1864faab2101e0e36382a0d8c01c856563e6d8f59591bb7fae4f91fb2fce431e11fe6c896348";
 
 /* This is the unix timestamp of the first "mined" block (technically block 2, not the genesis block)
    You can get this value by doing "print_block 2" in Plenteumd. It is used to know what timestamp
