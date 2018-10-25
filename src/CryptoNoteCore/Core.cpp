@@ -574,7 +574,7 @@ std::error_code Core::addBlock(const CachedBlock& cachedBlock, RawBlock&& rawBlo
   bool addOnTop = cache->getTopBlockIndex() == previousBlockIndex;
   auto maxBlockCumulativeSize = currency.maxBlockCumulativeSize(previousBlockIndex + 1);
   if (cumulativeBlockSize > maxBlockCumulativeSize) {
-    logger(Logging::DEBUGGING) << "Block " << blockStr << " has too big cumulative size";
+    logger(Logging::DEBUGGING) << "Block " << blockStr << " has too big cumulative size: " << cumulativeBlockSize;
     return error::BlockValidationError::CUMULATIVE_BLOCK_SIZE_TOO_BIG;
   }
 
@@ -636,7 +636,7 @@ std::error_code Core::addBlock(const CachedBlock& cachedBlock, RawBlock&& rawBlo
 
   if (!currency.getBlockReward(cachedBlock.getBlock().majorVersion, blocksSizeMedian,
                                cumulativeBlockSize, alreadyGeneratedCoins, cumulativeFee, reward, emissionChange)) {
-    logger(Logging::DEBUGGING) << "Block " << blockStr << " has too big cumulative size";
+    logger(Logging::DEBUGGING) << "Block " << blockStr << " has too big cumulative size (" << cumulativeBlockSize << ")";
     return error::BlockValidationError::CUMULATIVE_BLOCK_SIZE_TOO_BIG;
   }
 

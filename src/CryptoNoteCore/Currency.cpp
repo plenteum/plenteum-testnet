@@ -174,7 +174,7 @@ namespace CryptoNote {
 
 		return true;
 	}
-
+	//HERE
 	size_t Currency::maxBlockCumulativeSize(uint64_t height) const {
 		assert(height <= std::numeric_limits<uint64_t>::max() / m_maxBlockSizeGrowthSpeedNumerator);
 		size_t maxSize = static_cast<size_t>(m_maxBlockSizeInitial +
