@@ -73,7 +73,8 @@ const char GENESIS_COINBASE_TX_HEX[]						 = "011401ff00018080d5d58c8fa15d02cb36
 const uint64_t GENESIS_BLOCK_TIMESTAMP                       = 0;
 
 const size_t   CRYPTONOTE_REWARD_BLOCKS_WINDOW               = 100;
-const size_t   CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE     = 10000; //size of block (bytes) after which reward for block calculated using block size
+const size_t   CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE	 = 10000; //size of block (bytes) after which reward for block calculated using block size
+const size_t   CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE_V1	 = 100000; //size of block (bytes) after which reward for block calculated using block size (fix tx sizes issue)
 const size_t   CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE_CURRENT = CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE;
 const size_t   CRYPTONOTE_COINBASE_BLOB_RESERVED_SIZE        = 600;
 const size_t   CRYPTONOTE_DISPLAY_DECIMAL_POINT              = 2; // the number of decimal points to display in the wallet and other software
@@ -130,6 +131,7 @@ const uint32_t UPGRADE_HEIGHT_V2                             = 1;
 const uint32_t UPGRADE_HEIGHT_V3                             = 2;
 const uint32_t UPGRADE_HEIGHT_V4                             = 3; // Upgrade height for CN-Lite Variant 1 switch.
 const uint32_t UPGRADE_HEIGHT_V5							 = 200; // Upgrade height for DustFund V1.
+const uint32_t UPGRADE_HEIGHT_V6							 = 250;  //fix tx sizes issues
 
 const uint32_t UPGRADE_HEIGHT_CURRENT                        = UPGRADE_HEIGHT_V5;
 const unsigned UPGRADE_VOTING_THRESHOLD                      = 90;               // percent
@@ -146,6 +148,7 @@ const uint64_t FORK_HEIGHTS[] =
     2,
     3,
     200, //first fork to introduce DUST fund
+	250, //fix tx sizes issue
 	100000 //difficulty update and web wallet direct connect
 };
 
@@ -181,7 +184,8 @@ const uint8_t  CURRENT_TRANSACTION_VERSION                   =  TRANSACTION_VERS
 const uint8_t  BLOCK_MAJOR_VERSION_1                         =  0;
 const uint8_t  BLOCK_MAJOR_VERSION_2                         =  1;
 const uint8_t  BLOCK_MAJOR_VERSION_3                         =  2;
-const uint8_t  BLOCK_MAJOR_VERSION_4                         =  3;
+const uint8_t  BLOCK_MAJOR_VERSION_4						 =  3;
+const uint8_t  BLOCK_MAJOR_VERSION_5						 =  4; //block version to fix tx sizes issue
 const uint8_t  BLOCK_MINOR_VERSION_0                         =  0;
 const uint8_t  BLOCK_MINOR_VERSION_1                         =  1;
 
