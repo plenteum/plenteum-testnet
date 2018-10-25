@@ -598,6 +598,7 @@ namespace CryptoNote {
 		case BLOCK_MAJOR_VERSION_2:
 		case BLOCK_MAJOR_VERSION_3:
 		case BLOCK_MAJOR_VERSION_4:
+		case BLOCK_MAJOR_VERSION_5:
 			return checkProofOfWorkV2(block, currentDiffic);
 		}
 
