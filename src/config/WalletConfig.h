@@ -1,3 +1,4 @@
+// Copyright (c) 2018, The TurtleCoin Developers
 // Copyright (c) 2018, The Plenteum Developers
 // 
 // Please see the included LICENSE file for more information.
@@ -10,7 +11,7 @@
 namespace WalletConfig
 {
     /* The prefix your coins address starts with */
-    const std::string addressPrefix = "PLe";
+    const std::string addressPrefix = "PLE";
 
     /* Your coins 'Ticker', e.g. Monero = XMR, Bitcoin = BTC */
     const std::string ticker = "PLE";
@@ -39,7 +40,7 @@ namespace WalletConfig
     const std::string contactLink = "http://chat.plenteum.com";
 
 
-    /* The number of decimals your coin has */
+        /* The number of decimals your coin has */
 	const int numDecimalPlaces = CryptoNote::parameters
 		::CRYPTONOTE_DUST_DECIMAL_POINT;
 

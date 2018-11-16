@@ -6,69 +6,148 @@
 
 ### How To Compile
 
-On Linux or Mac on a non standard architecture, and can't get GNU Readline installed?
-
-Disable it with `cmake .. -DENABLE_READLINE=FALSE`
-
-#### Ubuntu 16.04+ and MacOS 10.10+
-
-There is a bash installation script for Ubuntu 16.04+ and MacOS 10.10+ which can be used to checkout and build the project from source:
-
-`$ curl -sL "https://raw.githubusercontent.com/plenteum/plenteum-testnet/master/scripts/multi_installer.sh" | bash `
-
-On Ubuntu you will be asked for sudo rights to install software. The binaries will be in `./src` after compilation is complete.
-
-This script can be used from inside the git repository to build the project from the checked out source, `./multi_installer.sh`
-
-See the script for more installation details and please consider extending it for your operating system and distribution!
-
-If the script doesn't work for you:
-
 #### Linux
 
 ##### Prerequisites
 
-- You will need the following packages: boost (1.55 or higher), rocksdb, cmake, git, gcc (4.9 or higher), g++ (4.9 or higher), make, GNU readline, and python. Most of these should already be installed on your system.
-- For example on Ubuntu: `sudo apt-get install -y build-essential python-dev gcc g++ git cmake libboost-all-dev libreadline-dev`
+You will need the following packages: boost, cmake (3.8 or higher), make, and git.
 
-##### Building
+You will also need either GCC/G++, or Clang.
 
-- `git clone -b master https://github.com/plenteum/plenteum-testnet`
-- `cd plenteum-testnet`
-- `mkdir build && cd $_`
+If you are using GCC, you will need GCC-7.0 or higher.
+
+If you are using Clang, you will need Clang 6.0 or higher. You will also need libstdc++\-6.0 or higher.
+
+##### Ubuntu, using GCC
+
+- `sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y`
+- `sudo apt-get update`
+- `sudo apt-get install aptitude -y`
+- `sudo aptitude install -y build-essential g++-8 gcc-8 git libboost-all-dev python-pip`
+- `sudo pip install cmake`
+- `export CC=gcc-8`
+- `export CXX=g++-8`
+- `git clone -b master --single-branch https://github.com/plenteum/plenteum`
+- `cd plenteum`
+- `mkdir build`
+- `cd build`
 - `cmake ..`
 - `make`
 
-If you're receiving a permission denied error running `cmake ..` on ubuntu, then you need to give execute permission to the version.sh file in rocksdb by running `sudo chmod +x external/rocksdb/build_tools/version.sh`
+The binaries will be in the `src` folder when you are complete.
 
-#### Apple
+- `cd src`
+- `./Plenteumd --version`
+
+##### Ubuntu, using Clang
+
+- `sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y`
+- `wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -`
+
+You need to modify the below command for your version of ubuntu - see https://apt.llvm.org/
+
+* Ubuntu 14.04 (Trusty)
+- `sudo add-apt-repository "deb https://apt.llvm.org/trusty/ llvm-toolchain-trusty 6.0 main"`
+
+* Ubuntu 16.04 (Xenial)
+- `sudo add-apt-repository "deb https://apt.llvm.org/xenial/ llvm-toolchain-xenial 6.0 main"`
+
+* Ubuntu 18.04 (Bionic)
+- `sudo add-apt-repository "deb https://apt.llvm.org/bionic/ llvm-toolchain-bionic 6.0 main"`
+
+- `sudo apt-get update`
+- `sudo apt-get install aptitude -y`
+- `sudo aptitude install -y -o Aptitude::ProblemResolver::SolutionCost='100*canceled-actions,200*removals' build-essential clang-6.0 libstdc++-7-dev git libboost-all-dev python-pip`
+- `sudo pip install cmake`
+- `export CC=clang-6.0`
+- `export CXX=clang++-6.0`
+- `git clone -b master --single-branch https://github.com/plenteum/plenteum`
+- `cd plenteum`
+- `mkdir build`
+- `cd build`
+- `cmake ..`
+- `make`
+
+The binaries will be in the `src` folder when you are complete.
+
+- `cd src`
+- `./Plenteumd --version`
+
+##### Generic Linux
+
+Ensure you have the dependencies listed above.
+
+If you want to use clang, ensure you set the environment variables `CC` and `CXX`.
+See the ubuntu instructions for an example.
+
+- `git clone -b master --single-branch https://github.com/plenteum/plenteum`
+- `cd plenteum`
+- `mkdir build`
+- `cd build`
+- `cmake ..`
+- `make`
+
+The binaries will be in the `src` folder when you are complete.
+
+- `cd src`
+- `./Plenteumd --version`
+
+#### OSX/Apple, using GCC
 
 ##### Prerequisites
 
-- Install [cmake](https://cmake.org/). See [here](https://stackoverflow.com/questions/23849962/cmake-installer-for-mac-fails-to-create-usr-bin-symlinks) if you are unable call `cmake` from the terminal after installing.
-- Install the [boost](http://www.boost.org/) libraries. Either compile boost manually or run `brew install boost`.
-- Install [GNU Readline](https://tiswww.case.edu/php/chet/readline/rltop.html) by running `brew install readline; brew link --force readline`. - Make sure you run this full command, or it will link the wrong version of readline
 - Install XCode and Developer Tools.
 
 ##### Building
 
-- `git clone -b master https://github.com/plenteum/plenteum-testnet`
-- `cd plenteum-testnet`
-- `mkdir build && cd $_`
-- `cmake ..` or `cmake -DBOOST_ROOT=<path_to_boost_install> ..` when building
-  from a specific boost install. If you used brew to install boost, your path is most likely `/usr/local/include/boost.`
+- `which brew || /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"`
+- `brew install --force cmake boost llvm gcc@8`
+- `export CC=gcc-8`
+- `export CXX=g++-8`
+- `git clone -b master --single-branch https://github.com/plenteum/plenteum`
+- `cd plenteum`
+- `mkdir build`
+- `cd build`
+- `cmake ..`
 - `make`
 
-The binaries will be in `./src` after compilation is complete.
+The binaries will be in the `src` folder when you are complete.
 
-Run `./src/Plenteumd` to connect to the network and let it sync (it may take a while).
+- `cd src`
+- `./Plenteumd --version`
 
-#### Windows 10
+#### OSX/Apple, using Clang
 
 ##### Prerequisites
+
+- Install XCode and Developer Tools.
+
+##### Building
+
+- `which brew || /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"`
+- `brew install --force cmake boost llvm`
+- `export CC=/usr/local/opt/llvm/bin/clang`
+- `export CXX=/usr/local/opt/llvm/bin/clang++`
+- `git clone -b master --single-branch https://github.com/plenteum/plenteum`
+- `cd plenteum`
+- `mkdir build`
+- `cd build`
+- `cmake ..`
+- `make`
+
+The binaries will be in the `src` folder when you are complete.
+
+- `cd src`
+- `./Plenteumd --version`
+
+
+#### Windows
+
+##### Prerequisites
+
 - Install [Visual Studio 2017 Community Edition](https://www.visualstudio.com/thank-you-downloading-visual-studio/?sku=Community&rel=15&page=inlineinstall)
-- When installing Visual Studio, it is **required** that you install **Desktop development with C++** and the **VC++ v140 toolchain** when selecting features. The option to install the v140 toolchain can be found by expanding the "Desktop development with C++" node on the right. You will need this for the project to build correctly.
-- Install [Boost 1.59.0](https://sourceforge.net/projects/boost/files/boost-binaries/1.59.0/), ensuring you download the installer for MSVC 14.
+- When installing Visual Studio, it is **required** that you install **Desktop development with C++**
+- Install the latest version of [Boost](https://bintray.com/boostorg/release/download_file?file_path=1.68.0%2Fbinaries%2Fboost_1_68_0-msvc-14.1-64.exe) - Currently Boost 1.68.
 
 ##### Building
 
@@ -76,21 +155,50 @@ Run `./src/Plenteumd` to connect to the network and let it sync (it may take a w
 - `cd <your_plenteum_directory>`
 - `mkdir build`
 - `cd build`
-- Set the PATH variable for cmake: ie. `set PATH="C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin";%PATH%`
-- `cmake -G "Visual Studio 14 Win64" .. -DBOOST_ROOT=D:/local/boost_1_59_0` (Or your boost installed dir.)
-- `MSBuild Plenteum.sln /p:Configuration=Release /m`
-- If all went well, it will complete successfully, and you will find all your binaries in the '..\build\src\Release' directory.
-- Additionally, a `.sln` file will have been created in the `build` directory. If you wish to open the project in Visual Studio with this, you can.
+- `set PATH="C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin";%PATH%`
+- `cmake -G "Visual Studio 15 2017 Win64" .. -DBOOST_ROOT=D:/local/boost_1_68_0`
 
-### Support
-Join our discord [here](https://discord.gg/EdE5jcC) or email us on support AT plenteum.com
+If you have errors on this step about not being able to find the following static libraries, you may need to update your cmake. Open 'Visual Studio Installer' and click 'Update'.
+
+- `MSBuild Plenteum.sln /p:Configuration=Release /m`
+
+The binaries will be in the `src/Release` folder when you are complete.
+
+- `cd src`
+- `cd Release`
+- `Plenteumd.exe --version`
+
+#### Raspberry Pi 3 B+
+The following images are known to work. Your operation system image **MUST** be 64 bit.
+
+##### Known working images
+
+- https://github.com/Crazyhead90/pi64/releases
+- https://fedoraproject.org/wiki/Architectures/ARM/Raspberry_Pi#aarch64_supported_images_for_Raspberry_Pi_3
+- https://archlinuxarm.org/platforms/armv8/broadcom/raspberry-pi-3
+
+Once you have a 64 bit image installed, setup proceeds the same as any Linux distribution. Ensure you have at least 2GB of ram, or the build is likely to fail. You may need to setup swap space.
+
+##### Building
+
+- `git clone -b master --single-branch https://github.com/plenteum/plenteum`
+- `cd plenteum`
+- `mkdir build`
+- `cd build`
+- `cmake ..`
+- `make`
+
+The binaries will be in the `src` folder when you are complete.
+
+- `cd src`
+- `./Plenteumd --version`
 
 #### Thanks
-Cryptonote Developers, Bytecoin Developers, Monero Developers, Forknote Project, TurtleCoin Developers and TurtleCoin Community
+Cryptonote Developers, Bytecoin Developers, Monero Developers, Forknote Project, Plenteum Community
 
 ### Copypasta for license when editing files
 
-Hi Plenteum contributor, thanks for forking and sending back Pull Requests. Extensive docs about contributing are in the works or elsewhere. For now this is the bit we need to get into all the files we touch. Please add it to the top of the files, see src/CryptoNoteConfig.h for an example.
+Hi Plenteum contributor, thanks for forking and sending back Pull Requests. Extensive docs about contributing are in the works or elsewhere. For now this is the bit we need to get into all the files we touch. Please add it to the top of the files, see [src/CryptoNoteConfig.h](https://github.com/plenteum/plenteum/commit/28cfef2575f2d767f6e512f2a4017adbf44e610e) for an example.
 
 ```
 // Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
