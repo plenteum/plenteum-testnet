@@ -200,7 +200,7 @@ uint64_t WalletSynchronizer::processTransactionInputs(
             /* Take the amount off the current amount (If a key doesn't exist,
                it will default to zero, so this is just setting the value
                to the negative amount in that case */
-            transfers[publicSpendKey] -= keyInput.amount;
+			transfers[publicSpendKey] -= static_cast<int64_t>(keyInput.amount);
 
             /* The transaction has been spent, discard the key image so we
                don't double spend it */
@@ -248,7 +248,8 @@ std::tuple<bool, uint64_t> WalletSynchronizer::processTransactionOutputs(
         if (!Crypto::underive_public_key(
             derivation, outputIndex, tx.keyOutputs[outputIndex].key, spendKey))
         {
-            return {false, 0};
+            /* Not our output */
+			continue;
         }
 
         const auto spendKeys = m_subWallets->m_publicSpendKeys;
@@ -381,8 +382,7 @@ void WalletSynchronizer::processCoinbaseTransaction(
     const uint64_t blockTimestamp,
     const uint64_t blockHeight)
 {
-    /* TODO: Input is a uint64_t, but we store it as an int64_t so it can be
-       negative - need to handle overflow */
+
     std::unordered_map<Crypto::PublicKey, int64_t> transfers;
 
     processTransactionOutputs(rawTX, transfers, blockHeight);
@@ -417,8 +417,6 @@ void WalletSynchronizer::processTransaction(
     const uint64_t blockTimestamp,
     const uint64_t blockHeight)
 {
-    /* TODO: Input is a uint64_t, but we store it as an int64_t so it can be
-       negative - need to handle overflow */
     std::unordered_map<Crypto::PublicKey, int64_t> transfers;
 
     /* Finds the sum of inputs, addds the amounts that belong to us to the
