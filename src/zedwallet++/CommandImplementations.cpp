@@ -82,9 +82,6 @@ void balance(const std::shared_ptr<WalletBackend> walletBackend)
 {
     auto [unlockedBalance, lockedBalance] = walletBackend->getTotalBalance();
 
-	/*
-	DL-TODO: This won't work for plenteum chain as we have zero fees, so we can't rely on fusions here...
-	*/
     /* We can make a better approximation of the view wallet balance if we
        ignore fusion transactions.
        See https://github.com/turtlecoin/turtlecoin/issues/531 */

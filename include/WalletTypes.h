@@ -228,17 +228,17 @@ namespace WalletTypes
 
                 return sum;
             }
-			//DL-TODO: Fix this as it's not going to work for plenteum
 
             /* It's worth noting that this isn't a conclusive check for if a
                transaction is a fusion transaction - there are some requirements
                it has to meet - but we don't need to check them, as the daemon
                will handle that for us - Any transactions that come to the
-               wallet (assuming a non malicious daemon) that are zero and not
-               a coinbase, is a fusion transaction */
+               wallet (assuming a non malicious daemon) that are zero total amount 
+			   (not zero fees as PLE allows zero fee transactions for normal sends)
+			   and not a coinbase, is a fusion transaction */
             bool isFusionTransaction() const
             {
-                return fee == 0 && !isCoinbaseTransaction;
+                return totalAmount() == 0 && !isCoinbaseTransaction;
             }
 
             /////////////////////////////

@@ -130,13 +130,7 @@ void balance(CryptoNote::INode &node, CryptoNote::WalletGreen &wallet,
         for (size_t i = 0; i < numTransactions; i++)
         {
             const CryptoNote::WalletTransaction t = wallet.getTransaction(i);
-
-            /* Fusion transactions are zero fee, skip them. Coinbase
-               transactions are also zero fee, include them. */
-            if (t.isFusionTransaction()|| t.isBase)
-            {
-                confirmedBalance += t.totalAmount;
-            }
+            confirmedBalance += t.totalAmount;
         }
     }
 
