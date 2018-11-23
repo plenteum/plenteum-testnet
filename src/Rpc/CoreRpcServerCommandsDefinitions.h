@@ -756,10 +756,12 @@ struct COMMAND_RPC_QUERY_BLOCKS_DETAILED {
   struct request {
     std::vector<Crypto::Hash> blockIds;
     uint64_t timestamp;
+	uint32_t blockCount;
 
     void serialize(ISerializer &s) {
       KV_MEMBER(blockIds);
-      KV_MEMBER(timestamp)
+	  KV_MEMBER(timestamp)
+	  KV_MEMBER(blockCount)
     }
   };
 
