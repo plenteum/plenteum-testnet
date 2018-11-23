@@ -259,7 +259,7 @@ std::vector<std::string> split(const std::string& str, char delim = ' ')
     return cont;
 }
 
-bool parseDaemonAddressFromString(std::string& host, int port, const std::string& address)
+bool parseDaemonAddressFromString(std::string &host, uint16_t &port, const std::string address)
 {
     std::vector<std::string> parts = split(address, ':');
 

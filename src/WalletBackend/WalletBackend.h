@@ -223,8 +223,12 @@ class WalletBackend
         std::vector<WalletTypes::Transaction> getTransactionsRange(
             const uint64_t startHeight, const uint64_t endHeight) const;
 
+		/* Get the node fee and address ({0, ""} if empty) */
         std::tuple<uint64_t, std::string> getNodeFee() const;
         
+		/* Swap to a different daemon node */
+		WalletError swapNode(std::string daemonHost, uint16_t daemonPort);
+
         /////////////////////////////
         /* Public member variables */
         /////////////////////////////

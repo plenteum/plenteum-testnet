@@ -17,6 +17,7 @@
 
 #include <zedwallet++/ColouredMsg.h>
 #include <zedwallet++/Commands.h>
+#include <zedwallet++/GetInput.h>
 #include <zedwallet++/Menu.h>
 #include <zedwallet++/Open.h>
 #include <zedwallet++/Sync.h>
@@ -596,4 +597,12 @@ void advanced(const std::shared_ptr<WalletBackend> walletBackend)
         printCommands(advancedCommands(),
                       basicCommands().size());
     }
+}
+
+void swapNode(const std::shared_ptr<WalletBackend> walletBackend)
+{
+	const auto[host, port] = getDaemonAddress();
+	std::cout << InformationMsg("\nSwapping node, this may take some time...\n");
+	walletBackend->swapNode(host, port);
+	std::cout << SuccessMsg("Node swap complete.\n\n");
 }
