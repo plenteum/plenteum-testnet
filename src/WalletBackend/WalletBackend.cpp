@@ -31,6 +31,8 @@
 
 #include <Mnemonics/Mnemonics.h>
 
+#include <NodeRpcProxy/NodeErrors.h>
+
 #include <WalletBackend/Constants.h>
 #include <WalletBackend/JsonSerialization.h>
 #include <WalletBackend/NodeFee.h>
@@ -276,13 +278,15 @@ std::tuple<WalletError, std::shared_ptr<WalletBackend>> WalletBackend::importWal
         scanHeight, newWallet, daemonHost, daemonPort
     ));
 
-    if (WalletError error = wallet->init(); error != SUCCESS)
-    {
-        return {error, nullptr};
-    }
+	WalletError daemonInitError = wallet->init();
 
     /* Save to disk */
     WalletError error = wallet->save();
+
+	if (daemonInitError)
+	{
+		return { daemonInitError, wallet };
+	}
 
     return {error, wallet};
 }
@@ -313,13 +317,15 @@ std::tuple<WalletError, std::shared_ptr<WalletBackend>> WalletBackend::importWal
         newWallet, daemonHost, daemonPort
     ));
 
-    if (WalletError error = wallet->init(); error != SUCCESS)
-    {
-        return {error, nullptr};
-    }
+	WalletError daemonInitError = wallet->init();
 
     /* Save to disk */
     WalletError error = wallet->save();
+
+	if (daemonInitError)
+	{
+		return { daemonInitError, wallet };
+	}
 
     return {error, wallet};
 }
@@ -346,13 +352,15 @@ std::tuple<WalletError, std::shared_ptr<WalletBackend>> WalletBackend::importVie
         daemonPort
     ));
 
-    if (WalletError error = wallet->init(); error != SUCCESS)
-    {
-        return {error, nullptr}; 
-    }
+	WalletError daemonInitError = wallet->init();
 
-    /* Save to disk */
-    WalletError error = wallet->save();
+	/* Save to disk */
+	WalletError error = wallet->save();
+	
+	if (daemonInitError)
+	{
+		return { daemonInitError, wallet };
+	}
 
     return {error, wallet};
 }
@@ -392,13 +400,15 @@ std::tuple<WalletError, std::shared_ptr<WalletBackend>> WalletBackend::createWal
         scanHeight, newWallet, daemonHost, daemonPort
     ));
 	
-    if (WalletError error = wallet->init(); error != SUCCESS)
-    {
-        return {error, nullptr};
-    }
+	WalletError daemonInitError = wallet->init();
+
+	/* Save to disk */
+	WalletError error = wallet->save();
 	
-    /* Save to disk */
-    WalletError error = wallet->save();
+	if (daemonInitError)
+	{
+		return { daemonInitError, wallet };
+	}
 	
     return {error, wallet};
 }
@@ -552,9 +562,15 @@ WalletError WalletBackend::init()
 
     m_daemon->init(callback);
 
-    /* TODO: This can hang - can't do it in a std::future since that hangs
-       when going of out scope */
-	if (error.get())
+	const auto errCode = error.get();
+
+	WalletError returnCode = SUCCESS;
+
+	if (errCode.value() == CryptoNote::NodeError::TIMEOUT)
+	{
+		returnCode = DAEMON_INIT_TIMEOUT;
+	}
+	else if (errCode)
 	{
 		return FAILED_TO_INIT_DAEMON;
 	}
@@ -584,7 +600,7 @@ WalletError WalletBackend::init()
     /* Launch the wallet sync process in a background thread */
     m_walletSynchronizer->start();
 
-    return SUCCESS;
+	return returnCode;
 }
 
 WalletError WalletBackend::save() const
