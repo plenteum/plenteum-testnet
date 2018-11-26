@@ -56,7 +56,4 @@ private:
     const DeleteTransaction deleteTransaction;
   };
 };
-
-TransactionPoolMessage makeAddTransaction(const Crypto::Hash& hash);
-TransactionPoolMessage makeDelTransaction(const Crypto::Hash& hash);
 }
