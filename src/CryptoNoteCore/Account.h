@@ -35,6 +35,7 @@ namespace CryptoNote {
     static void generateViewFromSpend(const Crypto::SecretKey&, Crypto::SecretKey&);
 
     const AccountKeys& getAccountKeys() const;
+    void setAccountKeys(const AccountKeys& keys);
     uint64_t get_createtime() const { return m_creation_timestamp; }
     void set_createtime(uint64_t val) { m_creation_timestamp = val; }
     void serialize(ISerializer& s);

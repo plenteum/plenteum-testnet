@@ -49,6 +49,9 @@ const AccountKeys &AccountBase::getAccountKeys() const {
   return m_keys;
 }
 
+void AccountBase::setAccountKeys(const AccountKeys &keys) {
+  m_keys = keys;
+}
 //-----------------------------------------------------------------
 
 void AccountBase::serialize(ISerializer &s) {

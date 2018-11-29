@@ -59,6 +59,7 @@ public:
   ~P2pNode();
   
   // IP2pNode
+  virtual std::unique_ptr<IP2pConnection> receiveConnection() override;
   virtual void stop() override;
 
   // IStreamSerializable
