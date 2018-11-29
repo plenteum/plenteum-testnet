@@ -2785,6 +2785,9 @@ void Core::updateBlockMedianSize() {
   auto lastBlockSizes = mainChain->getLastBlocksSizes(currency.rewardBlocksWindow());
 
   blockMedianSize = std::max(Common::medianValue(lastBlockSizes), static_cast<uint64_t>(nextBlockGrantedFullRewardZone));
+
+  //force media size to be at least 125k
+  blockMedianSize = blockMedianSize < 125000 ? 125000 : blockMedianSize;
 }
 
 uint64_t Core::get_current_blockchain_height() const
