@@ -179,7 +179,7 @@ namespace CryptoNote {
 	} // parameters
 
 	const char     CRYPTONOTE_NAME[] = "Plenteum";
-
+	
 	const uint8_t  TRANSACTION_VERSION_1 = 1;
 	const uint8_t  TRANSACTION_VERSION_2 = 2;
 	const uint8_t  CURRENT_TRANSACTION_VERSION = TRANSACTION_VERSION_1;

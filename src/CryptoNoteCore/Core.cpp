@@ -2338,6 +2338,7 @@ size_t Core::calculateCumulativeBlocksizeLimit(uint32_t height) const {
   return median * 2;
 }
 
+//TODO: Update here
 void Core::fillBlockTemplate(BlockTemplate& block, size_t medianSize, size_t maxCumulativeSize,
                              size_t& transactionsSize, uint64_t& fee) const {
   transactionsSize = 0;
@@ -2348,24 +2349,10 @@ void Core::fillBlockTemplate(BlockTemplate& block, size_t medianSize, size_t max
 
   TransactionSpentInputsChecker spentInputsChecker;
 
+  //no need to treat fusions any differently to standard transactions
   std::vector<CachedTransaction> poolTransactions = transactionPool->getPoolTransactions();
-  for (auto it = poolTransactions.rbegin(); it != poolTransactions.rend() && it->getTransactionFee() == 0; ++it) {
-    const CachedTransaction& transaction = *it;
-
-    auto transactionBlobSize = transaction.getTransactionBinaryArray().size();
-    if (currency.fusionTxMaxSize() < transactionsSize + transactionBlobSize) {
-      continue;
-    }
-
-    if (!spentInputsChecker.haveSpentInputs(transaction.getTransaction())) {
-      block.transactionHashes.emplace_back(transaction.getTransactionHash());
-      transactionsSize += transactionBlobSize;
-      logger(Logging::TRACE) << "Fusion transaction " << transaction.getTransactionHash() << " included to block template";
-    }
-  }
-
   for (const auto& cachedTransaction : poolTransactions) {
-    size_t blockSizeLimit = (cachedTransaction.getTransactionFee() == 0) ? medianSize : maxTotalSize;
+    size_t blockSizeLimit = maxTotalSize;
 
     if (blockSizeLimit < transactionsSize + cachedTransaction.getTransactionBinaryArray().size()) {
       continue;
@@ -2377,7 +2364,7 @@ void Core::fillBlockTemplate(BlockTemplate& block, size_t medianSize, size_t max
       block.transactionHashes.emplace_back(cachedTransaction.getTransactionHash());
       logger(Logging::TRACE) << "Transaction " << cachedTransaction.getTransactionHash() << " included to block template";
     } else {
-      logger(Logging::TRACE) << "Transaction " << cachedTransaction.getTransactionHash() << " is failed to include to block template";
+      logger(Logging::TRACE) << "Transaction " << cachedTransaction.getTransactionHash() << " has failed to include to block template";
     }
   }
 }
@@ -2831,9 +2818,6 @@ void Core::updateBlockMedianSize() {
   auto lastBlockSizes = mainChain->getLastBlocksSizes(currency.rewardBlocksWindow());
 
   blockMedianSize = std::max(Common::medianValue(lastBlockSizes), static_cast<uint64_t>(nextBlockGrantedFullRewardZone));
-
-  //force media size to be at least 125k
-  blockMedianSize = blockMedianSize < 125000 ? 125000 : blockMedianSize;
 }
 
 uint64_t Core::get_current_blockchain_height() const
