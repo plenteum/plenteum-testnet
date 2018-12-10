@@ -57,10 +57,15 @@ const Crypto::Hash& CachedBlock::getBlockLongHash() const {
       const auto& rawHashingBlock = getParentBlockHashingBinaryArray(true);
       blockLongHash = Hash();
       cn_slow_hash_v0(rawHashingBlock.data(), rawHashingBlock.size(), blockLongHash.get());
-    } else if (block.majorVersion >= BLOCK_MAJOR_VERSION_4) {
+    } else if (block.majorVersion == BLOCK_MAJOR_VERSION_4 || block.majorVersion == BLOCK_MAJOR_VERSION_5) {
       const auto& rawHashingBlock = getParentBlockHashingBinaryArray(true);
       blockLongHash = Hash();
       cn_lite_slow_hash_v1(rawHashingBlock.data(), rawHashingBlock.size(), blockLongHash.get());
+	}
+	else if (block.majorVersion >= BLOCK_MAJOR_VERSION_6) {
+		const auto& rawHashingBlock = getParentBlockHashingBinaryArray(true);
+		blockLongHash = Hash();
+		cn_turtle_slow_hash_v2(rawHashingBlock.data(), rawHashingBlock.size(), blockLongHash.get());
     } else {
       throw std::runtime_error("Unknown block major version.");
     }
