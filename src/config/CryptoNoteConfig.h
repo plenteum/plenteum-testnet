@@ -133,7 +133,7 @@ namespace CryptoNote {
 		const uint32_t UPGRADE_HEIGHT_V4 = 3; // Upgrade height for CN-Lite Variant 1 switch.
 		const uint32_t UPGRADE_HEIGHT_V5 = 200; // Upgrade height for DustFund V1.
 		const uint32_t UPGRADE_HEIGHT_V6 = 250;  //fix tx sizes issues
-		const uint32_t UPGRADE_HEIGHT_V7 = 1500;  //CN Turtle
+		const uint32_t UPGRADE_HEIGHT_V7 = 1150;  //CN Turtle
 
 		const uint32_t UPGRADE_HEIGHT_CURRENT = UPGRADE_HEIGHT_V7;
 		const unsigned UPGRADE_VOTING_THRESHOLD = 90;               // percent
@@ -151,7 +151,7 @@ namespace CryptoNote {
 			3,
 			200, //first fork to introduce DUST fund
 			250, //fix tx sizes issue
-			1500, // CN Turtle
+			1150, // CN Turtle
 			5000 //difficulty update and web wallet direct connect
 		};
 
