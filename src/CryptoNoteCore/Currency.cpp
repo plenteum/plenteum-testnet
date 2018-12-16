@@ -557,16 +557,18 @@ bool Currency::checkProofOfWorkV1(const CachedBlock& block, uint64_t currentDiff
 bool Currency::checkProofOfWorkV2(const CachedBlock& cachedBlock, uint64_t currentDifficulty) const {
   const auto& block = cachedBlock.getBlock();
   if (block.majorVersion < BLOCK_MAJOR_VERSION_2) {
+	  logger(ERROR) << "Invalid major version";
     return false;
   }
 
   if (!check_hash(cachedBlock.getBlockLongHash(), currentDifficulty)) {
+	  logger(ERROR) << "failed hash check";
     return false;
   }
 
   TransactionExtraMergeMiningTag mmTag;
   if (!getMergeMiningTagFromExtra(block.parentBlock.baseTransaction.extra, mmTag)) {
-    logger(ERROR) << "merge mining tag wasn't found in extra of the parent block miner transaction";
+	  logger(ERROR) << "merge mining tag wasn't found in extra of the parent block miner transaction";
     return false;
   }
 
