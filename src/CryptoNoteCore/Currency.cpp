@@ -562,7 +562,7 @@ bool Currency::checkProofOfWorkV2(const CachedBlock& cachedBlock, uint64_t curre
   }
 
   if (!check_hash(cachedBlock.getBlockLongHash(), currentDifficulty)) {
-	  logger(ERROR) << "failed hash check";
+	  logger(ERROR) << "Failed hash check for version: " << block.majorVersion << "( " << cachedBlock.getBlockLongHash() << ")";
     return false;
   }
 
