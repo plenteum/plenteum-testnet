@@ -35,7 +35,7 @@ const Crypto::Hash& CachedBlock::getTransactionTreeHash() const {
 const Crypto::Hash& CachedBlock::getBlockHash() const {
 	if (!blockHash.is_initialized()) {
 		BinaryArray blockBinaryArray = getBlockHashingBinaryArray();
-		if (BLOCK_MAJOR_VERSION_2 <= block.majorVersion) {
+		if (BLOCK_MAJOR_VERSION_1 <= block.majorVersion) {
 			const auto& parentBlock = getParentBlockHashingBinaryArray(false);
 			blockBinaryArray.insert(blockBinaryArray.end(), parentBlock.begin(), parentBlock.end());
 		}
@@ -48,22 +48,22 @@ const Crypto::Hash& CachedBlock::getBlockHash() const {
 
 const Crypto::Hash& CachedBlock::getBlockLongHash() const {
 	if (!blockLongHash.is_initialized()) {
-		if (block.majorVersion == BLOCK_MAJOR_VERSION_1) {
+		if (block.majorVersion == BLOCK_MAJOR_VERSION_0) {
 			const auto& rawHashingBlock = getBlockHashingBinaryArray();
 			blockLongHash = Hash();
 			cn_slow_hash_v0(rawHashingBlock.data(), rawHashingBlock.size(), blockLongHash.get());
 		}
-		else if ((block.majorVersion == BLOCK_MAJOR_VERSION_2) || (block.majorVersion == BLOCK_MAJOR_VERSION_3)) {
+		else if ((block.majorVersion == BLOCK_MAJOR_VERSION_1) || (block.majorVersion == BLOCK_MAJOR_VERSION_2)) {
 			const auto& rawHashingBlock = getParentBlockHashingBinaryArray(true);
 			blockLongHash = Hash();
 			cn_slow_hash_v0(rawHashingBlock.data(), rawHashingBlock.size(), blockLongHash.get());
 		}
-		else if (block.majorVersion == BLOCK_MAJOR_VERSION_4 || block.majorVersion == BLOCK_MAJOR_VERSION_5) {
+		else if (block.majorVersion == BLOCK_MAJOR_VERSION_3 || block.majorVersion == BLOCK_MAJOR_VERSION_4) {
 			const auto& rawHashingBlock = getParentBlockHashingBinaryArray(true);
 			blockLongHash = Hash();
 			cn_lite_slow_hash_v1(rawHashingBlock.data(), rawHashingBlock.size(), blockLongHash.get());
 		}
-		else if (block.majorVersion >= BLOCK_MAJOR_VERSION_6) {
+		else if (block.majorVersion >= BLOCK_MAJOR_VERSION_5) {
 			const auto& rawHashingBlock = getParentBlockHashingBinaryArray(true);
 			blockLongHash = Hash();
 			cn_turtle_lite_slow_hash_v2(rawHashingBlock.data(), rawHashingBlock.size(), blockLongHash.get());

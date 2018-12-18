@@ -184,12 +184,12 @@ namespace CryptoNote {
 	const uint8_t  TRANSACTION_VERSION_1 = 1;
 	const uint8_t  TRANSACTION_VERSION_2 = 2;
 	const uint8_t  CURRENT_TRANSACTION_VERSION = TRANSACTION_VERSION_1;
-	const uint8_t  BLOCK_MAJOR_VERSION_1 = 0;
-	const uint8_t  BLOCK_MAJOR_VERSION_2 = 1;
-	const uint8_t  BLOCK_MAJOR_VERSION_3 = 2;
-	const uint8_t  BLOCK_MAJOR_VERSION_4 = 3;
-	const uint8_t  BLOCK_MAJOR_VERSION_5 = 4; //block version to fix tx sizes issue
-	const uint8_t  BLOCK_MAJOR_VERSION_6 = 6; //skipping v5 to realign with param names
+	const uint8_t  BLOCK_MAJOR_VERSION_0 = 0;
+	const uint8_t  BLOCK_MAJOR_VERSION_1 = 1;
+	const uint8_t  BLOCK_MAJOR_VERSION_2 = 2;
+	const uint8_t  BLOCK_MAJOR_VERSION_3 = 3;
+	const uint8_t  BLOCK_MAJOR_VERSION_4 = 4; //block version to fix tx sizes issue
+	const uint8_t  BLOCK_MAJOR_VERSION_5 = 5; //algo change to CN Turtle
 	const uint8_t  BLOCK_MINOR_VERSION_0 = 0;
 	const uint8_t  BLOCK_MINOR_VERSION_1 = 1;
 

@@ -15,11 +15,13 @@
 #define CN_PAGE_SIZE                    2097152
 #define CN_SCRATCHPAD                   2097152
 #define CN_ITERATIONS                   1048576
+//mask: 2097136
 
 // Standard CryptoNight Lite Definitions
 #define CN_LITE_PAGE_SIZE               2097152
 #define CN_LITE_SCRATCHPAD              1048576
 #define CN_LITE_ITERATIONS              524288
+//mask: 1048560
 
 // Standard CryptoNight Turtle
 #define CN_DARK_PAGE_SIZE               524288
