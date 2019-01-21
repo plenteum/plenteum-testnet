@@ -67,7 +67,7 @@ namespace CryptoNote {
 
 		*/
 		const char GENESIS_COINBASE_TX_HEX[] = "011401ff00018080d5d58c8fa15d02cb36419ab0e1708b9d5f974a2f134d211a367cd1d29ca4be6f1b38ec1864faab2101e0e36382a0d8c01c856563e6d8f59591bb7fae4f91fb2fce431e11fe6c896348";
-
+		static_assert(sizeof(GENESIS_COINBASE_TX_HEX)/sizeof(*GENESIS_COINBASE_TX_HEX) != 1, "GENESIS_COINBASE_TX_HEX must not be empty.");
 		/* This is the unix timestamp of the first "mined" block (technically block 2, not the genesis block)
 		   You can get this value by doing "print_block 2" in Plenteumd. It is used to know what timestamp
 		   to import from when the block height cannot be found in the node or the node is offline. */
@@ -206,8 +206,11 @@ namespace CryptoNote {
 
 	// P2P Network Configuration Section - This defines our current P2P network version
 	// and the minimum version for communication between nodes
-	const uint8_t  P2P_CURRENT_VERSION = 3; //bump p2p version 
-	const uint8_t  P2P_MINIMUM_VERSION = 2; //bump min supported version
+	const uint8_t  P2P_CURRENT_VERSION = 4; //bump p2p version 
+	const uint8_t  P2P_MINIMUM_VERSION = 3; //bump min supported version
+
+	// This defines the minimum P2P version required for lite blocks propogation
+	const uint8_t  P2P_LITE_BLOCKS_PROPOGATION_VERSION = 4;
 
 	// This defines the number of versions ahead we must see peers before we start displaying
 	// warning messages that we need to upgrade our software.

@@ -57,8 +57,8 @@ public:
                                uint32_t& startIndex, uint32_t& currentIndex, uint32_t& fullOffset,
                                std::vector<BlockShortInfo>& entries) const = 0;
   virtual bool queryBlocksDetailed(const std::vector<Crypto::Hash>& knownBlockHashes, uint64_t timestamp,
-							  uint64_t& startIndex, uint64_t& currentIndex, uint64_t& fullOffset,
-							  std::vector<BlockDetails>& entries, uint32_t blockCount) const = 0;
+                              uint64_t& startIndex, uint64_t& currentIndex, uint64_t& fullOffset,
+                              std::vector<BlockDetails>& entries, uint32_t blockCount) const = 0;
 
   virtual bool getWalletSyncData(const std::vector<Crypto::Hash> &knownBlockHashes, uint64_t startHeight,
                                  uint64_t startTimestamp, std::vector<WalletTypes::WalletBlockInfo> &blocks) const = 0;
@@ -95,6 +95,7 @@ public:
   virtual bool addTransactionToPool(const BinaryArray& transactionBinaryArray) = 0;
 
   virtual std::vector<Crypto::Hash> getPoolTransactionHashes() const = 0;
+  virtual std::tuple<bool, CryptoNote::BinaryArray> getPoolTransaction(const Crypto::Hash& transactionHash) const = 0;
   virtual bool getPoolChanges(const Crypto::Hash& lastBlockHash, const std::vector<Crypto::Hash>& knownHashes,
                               std::vector<BinaryArray>& addedTransactions,
                               std::vector<Crypto::Hash>& deletedTransactions) const = 0;
@@ -112,7 +113,6 @@ public:
 
   virtual BlockDetails getBlockDetails(const Crypto::Hash& blockHash) const = 0;
   virtual TransactionDetails getTransactionDetails(const Crypto::Hash& transactionHash) const = 0;
-  virtual std::vector<Crypto::Hash> getAlternativeBlockHashesByIndex(uint32_t blockIndex) const = 0;
   virtual std::vector<Crypto::Hash> getBlockHashesByTimestamps(uint64_t timestampBegin, size_t secondsCount) const = 0;
   virtual std::vector<Crypto::Hash> getTransactionHashesByPaymentId(const Crypto::Hash& paymentId) const = 0;
 };

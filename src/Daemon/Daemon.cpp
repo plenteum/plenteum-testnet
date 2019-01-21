@@ -45,7 +45,7 @@ using namespace CryptoNote;
 using namespace Logging;
 using namespace DaemonConfig;
 
-void print_genesis_tx_hex(const std::vector<std::string> rewardAddresses, const bool blockExplorerMode, LoggerManager& logManager)
+void print_genesis_tx_hex(const std::vector<std::string> rewardAddresses, const bool blockExplorerMode, std::shared_ptr<LoggerManager> logManager)
 {
   std::vector<CryptoNote::AccountPublicAddress> rewardTargets;
 
@@ -78,7 +78,7 @@ void print_genesis_tx_hex(const std::vector<std::string> rewardAddresses, const 
   }
   else
   {
-    transaction = CryptoNote::CurrencyBuilder(logManager).generateGenesisTransaction();
+    transaction = CryptoNote::CurrencyBuilder(logManager).generateGenesisTransaction(rewardTargets);
   }
 
   std::string transactionHex = Common::toHex(CryptoNote::toBinaryArray(transaction));
@@ -108,23 +108,6 @@ JsonValue buildLoggerConfiguration(Level level, const std::string& logfile) {
   return loggerConfiguration;
 }
 
-/* Wait for input so users can read errors before the window closes if they
-   launch from a GUI rather than a terminal */
-void pause_for_input(int argc) {
-  /* if they passed arguments they're probably in a terminal so the errors will
-     stay visible */
-  if (argc == 1) {
-    #if defined(WIN32)
-    if (_isatty(_fileno(stdout)) && _isatty(_fileno(stdin))) {
-    #else
-    if(isatty(fileno(stdout)) && isatty(fileno(stdin))) {
-    #endif
-      std::cout << "Press any key to close the program: ";
-      getchar();
-    }
-  }
-}
-
 int main(int argc, char* argv[])
 {
   DaemonConfiguration config = initConfiguration(argv[0]);
@@ -133,7 +116,7 @@ int main(int argc, char* argv[])
   _CrtSetDbgFlag ( _CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF );
 #endif
 
-  LoggerManager logManager;
+  const auto logManager = std::make_shared<LoggerManager>();
   LoggerRef logger(logManager, "daemon");
 
   // Initial loading of CLI parameters
@@ -218,7 +201,7 @@ int main(int argc, char* argv[])
     Level cfgLogLevel = static_cast<Level>(static_cast<int>(Logging::ERROR) + config.logLevel);
 
     // configure logging
-    logManager.configure(buildLoggerConfiguration(cfgLogLevel, cfgLogFile));
+    logManager->configure(buildLoggerConfiguration(cfgLogLevel, cfgLogFile));
 
     logger(INFO, BRIGHT_GREEN) << getProjectCLIHeader() << std::endl;
 
@@ -338,9 +321,9 @@ int main(int argc, char* argv[])
     rpcServer.start(config.rpcInterface, config.rpcPort);
     logger(INFO) << "Core rpc server started ok";
 
-    Tools::SignalHandler::install([&dch, &p2psrv] {
-      dch.stop_handling();
-      p2psrv.sendStopSignal();
+    Tools::SignalHandler::install([&dch] {
+       dch.exit({});
+       dch.stop_handling();
     });
 
     logger(INFO) << "Starting p2p net loop...";

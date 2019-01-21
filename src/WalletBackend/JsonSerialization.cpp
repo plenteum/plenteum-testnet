@@ -7,13 +7,13 @@
 #include <WalletBackend/JsonSerialization.h>
 ////////////////////////////////////////////
 
-#include <tuple>
-
 #include <Common/StringTools.h>
 
+#include <tuple>
+
+#include <SubWallets/SubWallets.h>
+
 #include <WalletBackend/Constants.h>
-#include <WalletBackend/SubWallet.h>
-#include <WalletBackend/SubWallets.h>
 #include <WalletBackend/SynchronizationStatus.h>
 #include <WalletBackend/WalletBackend.h>
 #include <WalletBackend/WalletSynchronizer.h>
@@ -49,6 +49,7 @@ json SubWallet::toJson() const
         {"spentInputs", m_spentInputs},
         {"syncStartHeight", m_syncStartHeight},
         {"isPrimaryAddress", m_isPrimaryAddress},
+        {"unconfirmedIncomingAmounts", m_unconfirmedIncomingAmounts}
     };
 }
 
@@ -63,6 +64,7 @@ void SubWallet::fromJson(const json &j)
     m_spentInputs = j.at("spentInputs").get<std::vector<WalletTypes::TransactionInput>>();
     m_syncStartHeight = j.at("syncStartHeight").get<uint64_t>();
     m_isPrimaryAddress = j.at("isPrimaryAddress").get<bool>();
+    m_unconfirmedIncomingAmounts = j.at("unconfirmedIncomingAmounts").get<std::vector<WalletTypes::UnconfirmedInput>>();
 }
 
 ///////////////
@@ -89,6 +91,7 @@ json SubWallets::toJson() const
         {"lockedTransactions", m_lockedTransactions},
         {"privateViewKey", m_privateViewKey},
         {"isViewWallet", m_isViewWallet},
+        {"txPrivateKeys", txPrivateKeysToVector(m_transactionPrivateKeys)}
     };
 }
 
@@ -100,6 +103,7 @@ void SubWallets::fromJson(const json &j)
     m_lockedTransactions = j.at("lockedTransactions").get<std::vector<WalletTypes::Transaction>>();
     m_privateViewKey = j.at("privateViewKey").get<Crypto::SecretKey>();
     m_isViewWallet = j.at("isViewWallet").get<bool>();
+    m_transactionPrivateKeys = vectorToTxPrivateKeys(j.at("txPrivateKeys").get<std::vector<TxPrivateKey>>());
 }
 
 ///////////////////
@@ -126,13 +130,13 @@ json WalletBackend::toJson() const
     };
 }
 
-WalletError WalletBackend::fromJson(const json &j)
+Error WalletBackend::fromJson(const json &j)
 {
     uint16_t version = j.at("walletFileFormatVersion").get<uint16_t>();
 
     if (version != Constants::WALLET_FILE_FORMAT_VERSION)
     {
-		return UNSUPPORTED_WALLET_FILE_FORMAT_VERSION;
+        return UNSUPPORTED_WALLET_FILE_FORMAT_VERSION;
     }
 
     m_subWallets = std::make_shared<SubWallets>(
@@ -143,90 +147,29 @@ WalletError WalletBackend::fromJson(const json &j)
         j.at("walletSynchronizer").get<WalletSynchronizer>()
     );
 
-	return SUCCESS;
+    return SUCCESS;
 }
 
-WalletError WalletBackend::fromJson(
+Error WalletBackend::fromJson(
     const json &j,
     const std::string filename,
     const std::string password,
     const std::string daemonHost,
     const uint16_t daemonPort)
 {
-    fromJson(j);
-	if (WalletError error = fromJson(j); error != SUCCESS)
-	{
-		return error;
-	}
+    if (Error error = fromJson(j); error != SUCCESS)
+    {
+        return error;
+    }
+
     m_filename = filename;
     m_password = password;
 
-    m_daemon = std::make_shared<CryptoNote::NodeRpcProxy>(
-        daemonHost, daemonPort, m_logger->getLogger()
-    );
+    m_daemon = std::make_shared<Nigel>(daemonHost, daemonPort);
 
-    return init();
-}
+    init();
 
-/* Declaration of to_json and from_json have to be in the same namespace as
-   the type itself was declared in */
-namespace Crypto
-{
-    ///////////////////////
-    /* Crypto::SecretKey */
-    ///////////////////////
-
-    void to_json(json &j, const SecretKey &s)
-    {
-        j = Common::podToHex(s);
-    }
-
-    void from_json(const json &j, SecretKey &s)
-    {
-        Common::podFromHex(j.get<std::string>(), s.data);
-    }
-
-    ///////////////////////
-    /* Crypto::PublicKey */
-    ///////////////////////
-
-    void to_json(json &j, const PublicKey &p)
-    {
-        j = Common::podToHex(p);
-    }
-
-    void from_json(const json &j, PublicKey &p)
-    {
-        Common::podFromHex(j.get<std::string>(), p.data);
-    }
-
-    //////////////////
-    /* Crypto::Hash */
-    //////////////////
-
-    void to_json(json &j, const Hash &h)
-    {
-        j = Common::podToHex(h);
-    }
-
-    void from_json(const json &j, Hash &h)
-    {
-        Common::podFromHex(j.get<std::string>(), h.data);
-    }
-
-    //////////////////////
-    /* Crypto::KeyImage */
-    //////////////////////
-
-    void to_json(json &j, const KeyImage &k)
-    {
-        j = Common::podToHex(k);
-    }
-
-    void from_json(const json &j, KeyImage &k)
-    {
-        Common::podFromHex(j.get<std::string>(), k.data);
-    }
+    return SUCCESS;
 }
 
 ////////////////////////
@@ -382,6 +325,20 @@ void from_json(const json &j, Transfer &t)
     t.amount = j.at("amount").get<int64_t>();
 }
 
+void to_json(json &j, const TxPrivateKey &t)
+{
+    j = {
+        {"transactionHash", t.txHash},
+        {"txPrivateKey", t.txPrivateKey}
+    };
+}
+
+void from_json(const json &j, TxPrivateKey &t)
+{
+    t.txHash = j.at("transactionHash").get<Crypto::Hash>();
+    t.txPrivateKey = j.at("txPrivateKey").get<Crypto::SecretKey>();
+}
+
 /* std::map / std::unordered_map don't work great in json - they get serialized
    like this for example: 
 
@@ -401,7 +358,8 @@ So, lets instead convert to a vector of structs when converting to json, to
 make it easier for people using the wallet file in different languages to
 use */
 
-std::vector<Transfer> transfersToVector(std::unordered_map<Crypto::PublicKey, int64_t> transfers)
+std::vector<Transfer> transfersToVector(
+    const std::unordered_map<Crypto::PublicKey, int64_t> transfers)
 {
     std::vector<Transfer> vector;
 
@@ -417,7 +375,8 @@ std::vector<Transfer> transfersToVector(std::unordered_map<Crypto::PublicKey, in
     return vector;
 }
 
-std::unordered_map<Crypto::PublicKey, int64_t> vectorToTransfers(std::vector<Transfer> vector)
+std::unordered_map<Crypto::PublicKey, int64_t> vectorToTransfers(
+    const std::vector<Transfer> vector)
 {
     std::unordered_map<Crypto::PublicKey, int64_t> transfers;
 
@@ -429,7 +388,8 @@ std::unordered_map<Crypto::PublicKey, int64_t> vectorToTransfers(std::vector<Tra
     return transfers;
 }
 
-std::vector<SubWallet> subWalletsToVector(std::unordered_map<Crypto::PublicKey, SubWallet> subWallets)
+std::vector<SubWallet> subWalletsToVector(
+    const std::unordered_map<Crypto::PublicKey, SubWallet> subWallets)
 {
     std::vector<SubWallet> vector;
 
@@ -441,14 +401,41 @@ std::vector<SubWallet> subWalletsToVector(std::unordered_map<Crypto::PublicKey, 
     return vector;
 }
 
-std::unordered_map<Crypto::PublicKey, SubWallet> vectorToSubWallets(std::vector<SubWallet> vector)
+std::unordered_map<Crypto::PublicKey, SubWallet> vectorToSubWallets(
+    const std::vector<SubWallet> vector)
 {
     std::unordered_map<Crypto::PublicKey, SubWallet> transfers;
 
     for (const auto &s : vector)
     {
-		transfers[s.publicSpendKey()] = s;
+        transfers[s.publicSpendKey()] = s;
     }
 
     return transfers;
+}
+
+std::vector<TxPrivateKey> txPrivateKeysToVector(
+    const std::unordered_map<Crypto::Hash, Crypto::SecretKey> txPrivateKeys)
+{
+    std::vector<TxPrivateKey> vector;
+
+    for (const auto [txHash, txPrivateKey] : txPrivateKeys)
+    {
+        vector.push_back({txHash, txPrivateKey});
+    }
+
+    return vector;
+}
+
+std::unordered_map<Crypto::Hash, Crypto::SecretKey> vectorToTxPrivateKeys(
+    const std::vector<TxPrivateKey> vector)
+{
+    std::unordered_map<Crypto::Hash, Crypto::SecretKey> txPrivateKeys;
+
+    for (const auto t : vector)
+    {
+        txPrivateKeys[t.txHash] = t.txPrivateKey;
+    }
+
+    return txPrivateKeys;
 }

@@ -233,12 +233,11 @@ namespace WalletTypes
                transaction is a fusion transaction - there are some requirements
                it has to meet - but we don't need to check them, as the daemon
                will handle that for us - Any transactions that come to the
-               wallet (assuming a non malicious daemon) that are zero total amount 
-			   (not zero fees as PLE allows zero fee transactions for normal sends)
-			   and not a coinbase, is a fusion transaction */
+               wallet (assuming a non malicious daemon) that are zero and not
+               a coinbase, is a fusion transaction */
             bool isFusionTransaction() const
             {
-                return totalAmount() == 0 && !isCoinbaseTransaction;
+                return fee == 0 && !isCoinbaseTransaction;
             }
 
             /////////////////////////////
@@ -293,4 +292,109 @@ namespace WalletTypes
         /* The hashrate (based on the last block the daemon has synced) */
         uint64_t lastKnownHashrate;
     };
+
+    /* A structure just used to display locked balance, due to change from
+       sent transactions. We just need the amount and a unique identifier
+       (hash+key), since we can't spend it, we don't need all the other stuff */
+    struct UnconfirmedInput
+    {
+        /* The amount of the input */
+        uint64_t amount;
+
+        /* The transaction key we took from the key outputs */
+        Crypto::PublicKey key;
+
+        /* The transaction hash of the transaction that contains this input */
+        Crypto::Hash parentTransactionHash;
+    };
+
+    inline void to_json(nlohmann::json &j, const WalletBlockInfo &w)
+    {
+        j = {
+            {"coinbaseTX", w.coinbaseTransaction},
+            {"transactions", w.transactions},
+            {"blockHeight", w.blockHeight},
+            {"blockHash", w.blockHash},
+            {"blockTimestamp", w.blockTimestamp}
+        };
+    }
+
+    inline void from_json(const nlohmann::json &j, WalletBlockInfo &w)
+    {
+        w.coinbaseTransaction = j.at("coinbaseTX").get<RawCoinbaseTransaction>();
+        w.transactions = j.at("transactions").get<std::vector<RawTransaction>>();
+        w.blockHeight = j.at("blockHeight").get<uint64_t>();
+        w.blockHash = j.at("blockHash").get<Crypto::Hash>();
+        w.blockTimestamp = j.at("blockTimestamp").get<uint64_t>();
+    }
+
+    inline void to_json(nlohmann::json &j, const RawCoinbaseTransaction &r)
+    {
+        j = {
+            {"outputs", r.keyOutputs},
+            {"hash", r.hash},
+            {"txPublicKey", r.transactionPublicKey},
+            {"unlockTime", r.unlockTime}
+        };
+    }
+
+    inline void from_json(const nlohmann::json &j, RawCoinbaseTransaction &r)
+    {
+        r.keyOutputs = j.at("outputs").get<std::vector<KeyOutput>>();
+        r.hash = j.at("hash").get<Crypto::Hash>();
+        r.transactionPublicKey = j.at("txPublicKey").get<Crypto::PublicKey>();
+        r.unlockTime = j.at("unlockTime").get<uint64_t>();
+    }
+
+    inline void to_json(nlohmann::json &j, const RawTransaction &r)
+    {
+        j = {
+            {"outputs", r.keyOutputs},
+            {"hash", r.hash},
+            {"txPublicKey", r.transactionPublicKey},
+            {"unlockTime", r.unlockTime},
+            {"paymentID", r.paymentID},
+            {"inputs", r.keyInputs}
+        };
+    }
+
+    inline void from_json(const nlohmann::json &j, RawTransaction &r)
+    {
+        r.keyOutputs = j.at("outputs").get<std::vector<KeyOutput>>();
+        r.hash = j.at("hash").get<Crypto::Hash>();
+        r.transactionPublicKey = j.at("txPublicKey").get<Crypto::PublicKey>();
+        r.unlockTime = j.at("unlockTime").get<uint64_t>();
+        r.paymentID = j.at("paymentID").get<std::string>();
+        r.keyInputs = j.at("inputs").get<std::vector<CryptoNote::KeyInput>>();
+    }
+
+    inline void to_json(nlohmann::json &j, const KeyOutput &k)
+    {
+        j = {
+            {"key", k.key},
+            {"amount", k.amount}
+        };
+    }
+
+    inline void from_json(const nlohmann::json &j, KeyOutput &k)
+    {
+        k.key = j.at("key").get<Crypto::PublicKey>();
+        k.amount = j.at("amount").get<uint64_t>();
+    }
+
+    inline void to_json(nlohmann::json &j, const UnconfirmedInput &u)
+    {
+        j = {
+            {"amount", u.amount},
+            {"key", u.key},
+            {"parentTransactionHash", u.parentTransactionHash}
+        };
+    }
+
+    inline void from_json(const nlohmann::json &j, UnconfirmedInput &u)
+    {
+        u.amount = j.at("amount").get<uint64_t>();
+        u.key = j.at("key").get<Crypto::PublicKey>();
+        u.parentTransactionHash = j.at("parentTransactionHash").get<Crypto::Hash>();
+    }
 }

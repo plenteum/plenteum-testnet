@@ -30,7 +30,7 @@ std::vector<Command> nodeDownCommands()
     {
         Command("try_again", "Try to connect to the node again"),
         Command("continue", "Continue to the wallet interface regardless"),
-		Command("swap_node", "Specify a new daemon address/port to connect to"),
+        Command("swap_node", "Specify a new daemon address/port to connect to"),
         Command("exit", "Exit the program"),
     };
 }
@@ -54,6 +54,7 @@ std::vector<AdvancedCommand> allCommands()
         AdvancedCommand("ab_list", "List everyone in your address book", true, true),
         AdvancedCommand("ab_send", "Send " + WalletConfig::ticker + " to someone in your address book", false, true),
         AdvancedCommand("change_password", "Change your wallet password", true, true),
+        AdvancedCommand("get_tx_private_key", "Get the private key of a transaction", true, true),
         AdvancedCommand("make_integrated_address", "Make a combined address + payment ID", true, true),
         AdvancedCommand("incoming_transfers", "Show incoming transfers", true, true),
         AdvancedCommand("list_transfers", "Show all transfers", false, true),
@@ -64,7 +65,7 @@ std::vector<AdvancedCommand> allCommands()
         AdvancedCommand("save_csv", "Save all wallet transactions to a CSV file", true, true),
         AdvancedCommand("send_all", "Send all your balance to someone", false, true),
         AdvancedCommand("status", "Display sync status and network hashrate", true, true),
-		AdvancedCommand("swap_node", "Specify a new daemon address/port to sync from", true, true),
+        AdvancedCommand("swap_node", "Specify a new daemon address/port to sync from", true, true),
     };
 }
 

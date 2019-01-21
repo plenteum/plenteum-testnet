@@ -34,3 +34,7 @@ std::string getInput(
     const std::string prompt);
 
 std::tuple<std::string, uint16_t> getDaemonAddress();
+
+std::string getHash(
+    const std::string msg,
+    const bool cancelAllowed);

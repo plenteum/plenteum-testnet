@@ -2,7 +2,7 @@
 // Copyright (c) 2014-2018, The Monero Project
 // Copyright (c) 2018, The TurtleCoin Developers
 // Copyright (c) 2018, The Plenteum Developers
-// 
+//
 // Please see the included LICENSE file for more information.
 
 #include "Currency.h"
@@ -154,7 +154,6 @@ bool Currency::getBlockReward(uint8_t blockMajorVersion, size_t medianSize, size
   uint64_t baseReward = (m_moneySupply - alreadyGeneratedCoins) >> m_emissionSpeedFactor;
   if (alreadyGeneratedCoins == 0 && m_genesisBlockReward != 0) {
     baseReward = m_genesisBlockReward;
-    //std::cout << "Genesis block reward: " << baseReward << std::endl;
   }
 
   size_t blockGrantedFullRewardZone = blockGrantedFullRewardZoneByBlockVersion(blockMajorVersion);
@@ -325,7 +324,7 @@ bool Currency::isAmountApplicableInFusionTransactionInput(uint64_t amount, uint6
   auto it = std::lower_bound(PRETTY_AMOUNTS.begin(), PRETTY_AMOUNTS.end(), amount);
   if (it == PRETTY_AMOUNTS.end() || amount != *it) {
     return false;
-  } 
+  }
 
   amountPowerOfTen = static_cast<uint8_t>(std::distance(PRETTY_AMOUNTS.begin(), it) / 9);
   return true;
@@ -363,13 +362,13 @@ std::string Currency::formatAmount(uint64_t amount) const {
 }
 
 std::string Currency::formatAmount(int64_t amount) const {
-	std::string s = formatAmount(static_cast<uint64_t>(std::abs(amount)));
+  std::string s = formatAmount(static_cast<uint64_t>(std::abs(amount)));
 
-	if (amount < 0) {
-		s.insert(0, "-");
-	}
+  if (amount < 0) {
+    s.insert(0, "-");
+  }
 
-	return s;
+  return s;
 }
 
 bool Currency::parseAmount(const std::string& str, uint64_t& amount) const {
@@ -409,7 +408,7 @@ bool Currency::parseAmount(const std::string& str, uint64_t& amount) const {
 
 uint64_t Currency::getNextDifficulty(uint8_t version, uint32_t blockIndex, std::vector<uint64_t> timestamps, std::vector<uint64_t> cumulativeDifficulties) const
 {
-    /* nextDifficultyV3 and above are defined in src/CryptoNoteCore/Difficulty.cpp */
+	/* nextDifficultyV3 and above are defined in src/CryptoNoteCore/Difficulty.cpp */
 	if (blockIndex < CryptoNote::parameters::LWMA_2_DIFFICULTY_BLOCK_INDEX)
 	{
 		return nextDifficulty(version, blockIndex, timestamps, cumulativeDifficulties);
@@ -557,18 +556,16 @@ bool Currency::checkProofOfWorkV1(const CachedBlock& block, uint64_t currentDiff
 bool Currency::checkProofOfWorkV2(const CachedBlock& cachedBlock, uint64_t currentDifficulty) const {
   const auto& block = cachedBlock.getBlock();
   if (block.majorVersion < BLOCK_MAJOR_VERSION_1) {
-	  logger(ERROR) << "Invalid major version";
     return false;
   }
 
   if (!check_hash(cachedBlock.getBlockLongHash(), currentDifficulty)) {
-	  logger(ERROR) << "Failed hash check for version: " << block.majorVersion << "( " << cachedBlock.getBlockLongHash() << ")";
     return false;
   }
 
   TransactionExtraMergeMiningTag mmTag;
   if (!getMergeMiningTagFromExtra(block.parentBlock.baseTransaction.extra, mmTag)) {
-	  logger(ERROR) << "merge mining tag wasn't found in extra of the parent block miner transaction";
+    logger(ERROR) << "merge mining tag wasn't found in extra of the parent block miner transaction";
     return false;
   }
 
@@ -684,7 +681,7 @@ cachedGenesisBlock(new CachedBlock(genesisBlockTemplate)),
 logger(currency.logger) {
 }
 
-CurrencyBuilder::CurrencyBuilder(Logging::ILogger& log) : m_currency(log) {
+CurrencyBuilder::CurrencyBuilder(std::shared_ptr<Logging::ILogger> log) : m_currency(log) {
   maxBlockNumber(parameters::CRYPTONOTE_MAX_BLOCK_NUMBER);
   maxBlockBlobSize(parameters::CRYPTONOTE_MAX_BLOCK_BLOB_SIZE);
   maxTxSize(parameters::CRYPTONOTE_MAX_TX_SIZE);
@@ -757,7 +754,7 @@ Transaction CurrencyBuilder::generateGenesisTransaction() {
 }
  Transaction CurrencyBuilder::generateGenesisTransaction(const std::vector<AccountPublicAddress>& targets) {
     assert(!targets.empty());
- 
+
     CryptoNote::Transaction tx;
     tx.inputs.clear();
     tx.outputs.clear();
@@ -786,7 +783,6 @@ Transaction CurrencyBuilder::generateGenesisTransaction() {
       tk.key = outEphemeralPubKey;
       TransactionOutput out;
       out.amount = (i == 0) ? first_target_amount : target_amount;
-      std::cout << "outs: " << std::to_string(out.amount) << std::endl;
       out.target = tk;
       tx.outputs.push_back(out);
     }

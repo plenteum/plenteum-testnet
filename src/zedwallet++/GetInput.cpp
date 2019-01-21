@@ -9,11 +9,13 @@
 
 #include <config/WalletConfig.h>
 
+#include <Errors/ValidateParameters.h>
+
 #include "linenoise.hpp"
 
-#include <WalletBackend/ValidateParameters.h>
+#include <Utilities/FormatTools.h>
 
-#include <zedwallet++/ColouredMsg.h>
+#include <Utilities/ColouredMsg.h>
 #include <zedwallet++/Commands.h>
 #include <zedwallet++/Utilities.h>
 
@@ -88,7 +90,7 @@ std::string getInput(
     }
 	
     /* Remove any whitespace */
-    ZedUtilities::trim(command);
+    Common::trim(command);
 
     if (command != "")
     {
@@ -115,7 +117,7 @@ std::string getAddress(
             return "cancel";
         }
 
-        ZedUtilities::trim(address);
+        Common::trim(address);
 
         /* \n == no-op */
         if (address == "")
@@ -128,7 +130,7 @@ std::string getAddress(
             return address;
         }
 
-        if (WalletError error = validateAddresses({address}, integratedAddressesAllowed); error != SUCCESS)
+        if (Error error = validateAddresses({address}, integratedAddressesAllowed); error != SUCCESS)
         {
             std::cout << WarningMsg("Invalid address: ")
                       << WarningMsg(error) << std::endl;
@@ -159,7 +161,7 @@ std::string getPaymentID(
             return "cancel";
         }
 
-        ZedUtilities::trim(paymentID);
+        Common::trim(paymentID);
 
         if (paymentID == "cancel" && cancelAllowed)
         {
@@ -172,7 +174,7 @@ std::string getPaymentID(
         }
 
         /* Validate the payment ID */
-        if (WalletError error = validatePaymentID(paymentID); error != SUCCESS)
+        if (Error error = validatePaymentID(paymentID); error != SUCCESS)
         {
             std::cout << WarningMsg("Invalid payment ID: ")
                       << WarningMsg(error) << std::endl;
@@ -183,6 +185,43 @@ std::string getPaymentID(
         }
     }
 }
+
+std::string getHash(
+    const std::string msg,
+    const bool cancelAllowed)
+{
+    while (true)
+    {
+        std::cout << InformationMsg(msg);
+
+        std::string hash;
+
+        /* Fixes infinite looping when someone does a ctrl + c */
+        if (!std::getline(std::cin, hash))
+        {
+            return "cancel";
+        }
+
+        Common::trim(hash);
+
+        if (hash == "cancel" && cancelAllowed)
+        {
+            return hash;
+        }
+
+        /* Validate the hash */
+        if (Error error = validateHash(hash); error != SUCCESS)
+        {
+            std::cout << WarningMsg("Invalid hash: ")
+                      << WarningMsg(error) << std::endl;
+        }
+        else
+        {
+            return hash;
+        }
+    }
+}
+
 
 std::tuple<bool, uint64_t> getAmountToAtomic(
     const std::string msg,
@@ -206,7 +245,7 @@ std::tuple<bool, uint64_t> getAmountToAtomic(
             continue;
         }
 
-        ZedUtilities::trim(amountString);
+        Common::trim(amountString);
 
         /* If the user entered thousand separators, remove them */
         ZedUtilities::removeCharFromString(amountString, ',');
@@ -246,18 +285,22 @@ std::tuple<bool, uint64_t> getAmountToAtomic(
 
         try
         {
-            uint64_t amount = std::stol(amountString);
+            unsigned long long amount = std::stoull(amountString);
 
             if (amount < WalletConfig::minimumSend)
             {
                 std::cout << WarningMsg("The minimum send allowed is ")
-                          << WarningMsg(ZedUtilities::formatAmount(WalletConfig::minimumSend))
+                          << WarningMsg(Utilities::formatAmount(WalletConfig::minimumSend))
                           << WarningMsg("!\n");
             }
             else
             {
                 return {true, amount};
             }
+        }
+        catch (const std::out_of_range &)
+        {
+            std::cout << WarningMsg("Input is too large or too small!");
         }
         catch (const std::invalid_argument &)
         {
@@ -269,28 +312,35 @@ std::tuple<bool, uint64_t> getAmountToAtomic(
 
 std::tuple<std::string, uint16_t> getDaemonAddress()
 {
-	while (true)
-	{
-		std::cout << InformationMsg("\nEnter the daemon address you want to use.\n"
-			"You can omit the port, and it will default to ")
-			<< InformationMsg(CryptoNote::RPC_DEFAULT_PORT)
-			<< ".\n\nHit enter for the default of localhost: ";
-		std::string address;
-		std::string host = "127.0.0.1";
-		uint16_t port = CryptoNote::RPC_DEFAULT_PORT;
-		/* Fixes infinite looping when someone does a ctrl + c */
-		if (!std::getline(std::cin, address) || address == "")
-		{
-			return { host, port };
-		}
-		ZedUtilities::trim(address);
-		if (!ZedUtilities::parseDaemonAddressFromString(host, port, address))
-		{
-			std::cout << WarningMsg("\nInvalid daemon address! Try again.\n");
-			continue;
-		}
-		return { host, port };
-	}
+    while (true)
+    {
+        std::cout << InformationMsg("\nEnter the daemon address you want to use.\n"
+                                    "You can omit the port, and it will default to ")
+                  << InformationMsg(CryptoNote::RPC_DEFAULT_PORT)
+                  << ".\n\nHit enter for the default of localhost: ";
+
+        std::string address;
+
+        std::string host = "127.0.0.1";
+
+        uint16_t port = CryptoNote::RPC_DEFAULT_PORT;
+
+        /* Fixes infinite looping when someone does a ctrl + c */
+        if (!std::getline(std::cin, address) || address == "")
+        {
+            return {host, port};
+        }
+
+        Common::trim(address);
+
+        if (!ZedUtilities::parseDaemonAddressFromString(host, port, address))
+        {
+            std::cout << WarningMsg("\nInvalid daemon address! Try again.\n");
+            continue;
+        }
+
+        return {host, port};
+    }
 }
 
 /* Template instantations that we are going to use - this allows us to have
