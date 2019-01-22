@@ -292,6 +292,11 @@ class ApiDispatcher
             httplib::Response &res,
             const nlohmann::json &body) const;
 
+		std::tuple<Error, uint16_t> getBalances(
+			const httplib::Request &req,
+			httplib::Response &res,
+			const nlohmann::json &body) const;
+
         std::tuple<Error, uint16_t> getTxPrivateKey(
             const httplib::Request &req,
             httplib::Response &res,
