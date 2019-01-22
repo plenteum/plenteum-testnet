@@ -187,12 +187,12 @@ enum ErrorCode
 
     /* Value given is negative, but must be >= 0
        NOTE: Not used in WalletBackend, only here to maintain API compatibility
-       with plenteum-wallet-backend (typescript) */
+       with plenteum-wallet-backend-js */
     NEGATIVE_VALUE_GIVEN = 46,
 
     /* Key is not 64 char hex 
        NOTE: Not used in WalletBackend, only here to maintain API compatibility
-       with plenteum-wallet-backend (typescript) */
+       with plenteum-wallet-backend-js */
     INVALID_KEY_FORMAT = 47,
 
     /* Hash not 64 chars */
@@ -200,6 +200,11 @@ enum ErrorCode
 
     /* Hash not hex */
     HASH_INVALID = 49,
+
+	/* Number is a float, not an integer
+	NOTE: Not used in WalletBackend, only here to maintain API compatibility
+	with turtlecoin-wallet-backend-js */
+	NON_INTEGER_GIVEN = 50,
 };
 
 class Error
