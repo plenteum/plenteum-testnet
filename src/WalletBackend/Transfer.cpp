@@ -135,8 +135,10 @@ std::tuple<Error, Crypto::Hash> sendFusionTransactionAdvanced(
             continue;
         }
 
+		const uint64_t unlockTime = 0;
+
         TransactionResult txResult = makeTransaction(
-            mixin, daemon, ourInputs, paymentID, destinations, subWallets
+            mixin, daemon, ourInputs, paymentID, destinations, subWallets, unlockTime
         );
 
         tx = txResult.transaction;
@@ -242,9 +244,11 @@ std::tuple<Error, Crypto::Hash> sendTransactionBasic(
        as the static constructors were used */
     const std::string changeAddress = subWallets->getPrimaryAddress();
 
+	const uint64_t unlockTime = 0;
+
     return sendTransactionAdvanced(
         destinations, defaultMixin, fee, paymentID, {}, changeAddress, daemon,
-        subWallets
+        subWallets, unlockTime
     );
 }
 
@@ -256,7 +260,8 @@ std::tuple<Error, Crypto::Hash> sendTransactionAdvanced(
     const std::vector<std::string> addressesToTakeFrom,
     std::string changeAddress,
     const std::shared_ptr<Nigel> daemon,
-    const std::shared_ptr<SubWallets> subWallets)
+    const std::shared_ptr<SubWallets> subWallets,
+	const uint64_t unlockTime)
 {
     /* Append the fee transaction, if a fee is being used */
     const auto [feeAmount, feeAddress] = daemon->nodeFee();
@@ -328,7 +333,7 @@ std::tuple<Error, Crypto::Hash> sendTransactionAdvanced(
     );
 
     TransactionResult txResult = makeTransaction(
-        mixin, daemon, ourInputs, paymentID, destinations, subWallets
+        mixin, daemon, ourInputs, paymentID, destinations, subWallets, unlockTime
     );
 
     if (txResult.error)
@@ -1048,7 +1053,8 @@ TransactionResult makeTransaction(
     const std::vector<WalletTypes::TxInputAndOwner> ourInputs,
     const std::string paymentID,
     const std::vector<WalletTypes::TransactionDestination> destinations,
-    const std::shared_ptr<SubWallets> subWallets)
+    const std::shared_ptr<SubWallets> subWallets,
+	const uint64_t unlockTime)
 {
     /* Mix our inputs with fake ones from the network to hide who we are */
     const auto [mixinError, inputsAndFakes] = prepareRingParticipants(
@@ -1092,7 +1098,7 @@ TransactionResult makeTransaction(
 
     setupTX.version = CryptoNote::CURRENT_TRANSACTION_VERSION;
 
-    setupTX.unlockTime = 0;
+    setupTX.unlockTime = unlockTime;
 
     /* Convert from key inputs to the boost uglyness */
     setupTX.inputs = keyInputToTransactionInput(transactionInputs);
