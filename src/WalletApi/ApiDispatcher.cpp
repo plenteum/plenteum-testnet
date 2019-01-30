@@ -1,5 +1,4 @@
-// Copyright (c) 2018-2019, The TurtleCoin Developers
-// Copyright (c) 2018-2019, The Plenteum Developers
+// Copyright (c) 2018, The TurtleCoin Developers
 // 
 // Please see the included LICENSE file for more information.
 
@@ -197,8 +196,8 @@ ApiDispatcher::ApiDispatcher(
             /* Get balance for a specific address */
             .Get("/balance/" + ApiConstants::addressRegex, router(&ApiDispatcher::getBalanceForAddress, walletMustBeOpen, viewWalletsAllowed))
 
-			/* Get balances for each address */
-			.Get("/balances", router(&ApiDispatcher::getBalances, walletMustBeOpen, viewWalletsAllowed))
+            /* Get balances for each address */
+            .Get("/balances", router(&ApiDispatcher::getBalances, walletMustBeOpen, viewWalletsAllowed))
 
     /* OPTIONS */
 
@@ -487,10 +486,11 @@ std::tuple<Error, uint16_t> ApiDispatcher::createAddress(
     Response &res,
     const nlohmann::json &body)
 {
-    const auto [error, address] = m_walletBackend->addSubWallet();
+    const auto [error, address, privateSpendKey] = m_walletBackend->addSubWallet();
 
     nlohmann::json j {
-        {"address", address}
+        {"address", address},
+        {"privateSpendKey", privateSpendKey}
     };
 
     res.set_content(j.dump(4) + "\n", "application/json");
@@ -658,15 +658,16 @@ std::tuple<Error, uint16_t> ApiDispatcher::sendAdvancedTransaction(
         changeAddress = tryGetJsonValue<std::string>(body, "changeAddress");
     }
 
-	uint64_t unlockTime = 0;
+    uint64_t unlockTime = 0;
 
-	if (body.find("unlockTime") != body.end())
-	{
-		unlockTime = tryGetJsonValue<uint64_t>(body, "unlockTime");
-	}
+    if (body.find("unlockTime") != body.end())
+    {
+        unlockTime = tryGetJsonValue<uint64_t>(body, "unlockTime");
+    }
 
     auto [error, hash] = m_walletBackend->sendTransactionAdvanced(
-        destinations, mixin, fee, paymentID, subWalletsToTakeFrom, changeAddress, unlockTime
+        destinations, mixin, fee, paymentID, subWalletsToTakeFrom, changeAddress,
+        unlockTime
     );
 
     if (error)
@@ -1402,26 +1403,26 @@ std::tuple<Error, uint16_t> ApiDispatcher::getBalanceForAddress(
 }
 
 std::tuple<Error, uint16_t> ApiDispatcher::getBalances(
-	const httplib::Request &req,
-	httplib::Response &res,
-	const nlohmann::json &body) const
+    const httplib::Request &req,
+    httplib::Response &res,
+    const nlohmann::json &body) const
 {
-	const auto balances = m_walletBackend->getBalances();
+    const auto balances = m_walletBackend->getBalances();
 
-	nlohmann::json j;
+    nlohmann::json j;
 
-	for (const auto[address, unlocked, locked] : balances)
-	{
-		j.push_back({
-			{"address", address},
-			{"unlocked", unlocked},
-			{"locked", locked}
-			});
-	}
+    for (const auto [address, unlocked, locked] : balances)
+    {
+        j.push_back({
+            {"address", address},
+            {"unlocked", unlocked},
+            {"locked", locked}
+        });
+    }
 
-	res.set_content(j.dump(4) + "\n", "application/json");
+    res.set_content(j.dump(4) + "\n", "application/json");
 
-	return { SUCCESS, 200 };
+    return {SUCCESS, 200};
 }
 
 std::tuple<Error, uint16_t> ApiDispatcher::getTxPrivateKey(
