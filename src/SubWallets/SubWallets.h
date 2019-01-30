@@ -1,5 +1,4 @@
-// Copyright (c) 2018-2019, The TurtleCoin Developers
-// Copyright (c) 2018-2019, The Plenteum Developers
+// Copyright (c) 2018, The TurtleCoin Developers
 // 
 // Please see the included LICENSE file for more information.
 
@@ -42,7 +41,7 @@ class SubWallets
         /////////////////////////////
 
         /* Adds a sub wallet with a random spend key */
-        std::tuple<Error, std::string> addSubWallet();
+        std::tuple<Error, std::string, Crypto::SecretKey> addSubWallet();
 
         /* Imports a sub wallet with the given private spend key */
         std::tuple<Error, std::string> importSubWallet(
@@ -61,10 +60,10 @@ class SubWallets
         std::tuple<uint64_t, uint64_t> getMinInitialSyncStart() const;
 
         /* Converts the class to a json object */
-        json toJson() const;
+        void toJSON(rapidjson::Writer<rapidjson::StringBuffer> &writer) const;
 
         /* Initializes the class from a json string */
-        void fromJson(const json &j);
+        void fromJSON(const JSONObject &j);
 
         /* Store a transaction */
         void addTransaction(const WalletTypes::Transaction tx);
@@ -175,17 +174,6 @@ class SubWallets
         std::tuple<bool, Crypto::SecretKey> getTxPrivateKey(
             const Crypto::Hash txHash) const;
 
-		std::vector<std::tuple<std::string, uint64_t, uint64_t>> getBalances(
-			const uint64_t currentHeight) const;
-
-		/////////////////////////////
-		/* Public member variables */
-		/////////////////////////////
-
-		/* The public spend keys, used for verifying if a transaction is
-		   ours */
-		std::vector<Crypto::PublicKey> m_publicSpendKeys;
-
         void storeUnconfirmedIncomingInput(
             const WalletTypes::UnconfirmedInput input,
             const Crypto::PublicKey publicSpendKey);
@@ -194,6 +182,17 @@ class SubWallets
             const uint64_t timestamp,
             const uint64_t height);
 
+        std::vector<std::tuple<std::string, uint64_t, uint64_t>> getBalances(
+            const uint64_t currentHeight) const;
+
+        /////////////////////////////
+        /* Public member variables */
+        /////////////////////////////
+
+        /* The public spend keys, used for verifying if a transaction is
+           ours */
+        std::vector<Crypto::PublicKey> m_publicSpendKeys;
+        
     private:
 
         //////////////////////////////

@@ -1,5 +1,4 @@
-// Copyright (c) 2018-2019, The TurtleCoin Developers
-// Copyright (c) 2018-2019, The Plenteum Developers
+// Copyright (c) 2018, The TurtleCoin Developers
 // 
 // Please see the included LICENSE file for more information.
 
@@ -74,9 +73,11 @@ class WalletSynchronizer
 
         void stop();
 
-        json toJson() const;
+        /* Converts the class to a json object */
+        void toJSON(rapidjson::Writer<rapidjson::StringBuffer> &writer) const;
 
-        void fromJson(const json &j);
+        /* Initializes the class from a json string */
+        void fromJSON(const JSONObject &j);
 
         void initializeAfterLoad(
             const std::shared_ptr<Nigel> daemon,
