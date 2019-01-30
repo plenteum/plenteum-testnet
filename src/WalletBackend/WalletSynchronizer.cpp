@@ -1,5 +1,4 @@
-// Copyright (c) 2018-2019, The TurtleCoin Developers
-// Copyright (c) 2018-2019, The Plenteum Developers
+// Copyright (c) 2018, The TurtleCoin Developers
 // 
 // Please see the included LICENSE file for more information.
 
@@ -95,10 +94,6 @@ WalletSynchronizer::~WalletSynchronizer()
    and if we do any inheritance, things don't go awry. */
 void WalletSynchronizer::start()
 {
-    /* Call stop first, so if we reassign any threads, they have been correctly
-       stopped */
-    stop();
-
     /* Reinit any vars which may have changed if we previously called stop() */
     m_shouldStop = false;
 
@@ -152,8 +147,6 @@ void WalletSynchronizer::stop()
 
 void WalletSynchronizer::reset(uint64_t startHeight)
 {
-    stop();
-
     /* Reset start height / timestamp */
     m_startHeight = startHeight;
     m_startTimestamp = 0;
@@ -720,4 +713,35 @@ uint64_t WalletSynchronizer::getCurrentScanHeight() const
 void WalletSynchronizer::swapNode(const std::shared_ptr<Nigel> daemon)
 {
     m_daemon = daemon;
+}
+
+void WalletSynchronizer::fromJSON(const JSONObject &j)
+{
+    m_transactionSynchronizerStatus.fromJSON(getObjectFromJSON(j, "transactionSynchronizerStatus"));
+    m_blockDownloaderStatus = m_transactionSynchronizerStatus;
+
+    m_startTimestamp = getUint64FromJSON(j, "startTimestamp");
+
+    m_startHeight = getUint64FromJSON(j, "startHeight");
+
+    m_privateViewKey.fromString(getStringFromJSON(j, "privateViewKey"));
+}
+
+void WalletSynchronizer::toJSON(rapidjson::Writer<rapidjson::StringBuffer> &writer) const
+{
+    writer.StartObject();
+
+    writer.Key("transactionSynchronizerStatus");
+    m_transactionSynchronizerStatus.toJSON(writer);
+
+    writer.Key("startTimestamp");
+    writer.Uint(m_startTimestamp);
+
+    writer.Key("startHeight");
+    writer.Uint(m_startHeight);
+
+    writer.Key("privateViewKey");
+    m_privateViewKey.toJSON(writer);
+
+    writer.EndObject();
 }
