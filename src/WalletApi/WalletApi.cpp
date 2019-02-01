@@ -12,6 +12,7 @@
 #include <iostream>
 
 #include <thread>
+#include <chrono>
 
 #include <WalletApi/ApiDispatcher.h>
 #include <WalletApi/ParseArguments.h>
@@ -41,6 +42,8 @@ int main(int argc, char **argv)
 
         /* Launch the API */
         apiThread = std::thread(&ApiDispatcher::start, api.get());
+
+		std::this_thread::sleep_for(std::chrono::milliseconds(250));
 
         std::cout << "Want documentation on how to use the wallet-api?\n"
                      "See https://plenteum.github.io/wallet-api-docs/\n\n";
