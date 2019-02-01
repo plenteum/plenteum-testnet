@@ -665,6 +665,11 @@ std::vector<std::string> SubWallets::getAddresses() const
     return addresses;
 }
 
+uint64_t SubWallets::getWalletCount() const
+{
+	return m_subWallets.size();
+}
+
 /* Will throw if the public keys given don't exist */
 std::tuple<uint64_t, uint64_t> SubWallets::getBalance(
     std::vector<Crypto::PublicKey> subWalletsToTakeFrom,
