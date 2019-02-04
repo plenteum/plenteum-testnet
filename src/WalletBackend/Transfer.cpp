@@ -1,5 +1,4 @@
-// Copyright (c) 2018-2019, The TurtleCoin Developers
-// Copyright (c) 2018-2019, The Plenteum Developers
+// Copyright (c) 2018, The TurtleCoin Developers
 // 
 // Please see the included LICENSE file for more information.
 
@@ -135,10 +134,11 @@ std::tuple<Error, Crypto::Hash> sendFusionTransactionAdvanced(
             continue;
         }
 
-		const uint64_t unlockTime = 0;
+        const uint64_t unlockTime = 0;
 
         TransactionResult txResult = makeTransaction(
-            mixin, daemon, ourInputs, paymentID, destinations, subWallets, unlockTime
+            mixin, daemon, ourInputs, paymentID, destinations, subWallets,
+            unlockTime
         );
 
         tx = txResult.transaction;
@@ -244,7 +244,7 @@ std::tuple<Error, Crypto::Hash> sendTransactionBasic(
        as the static constructors were used */
     const std::string changeAddress = subWallets->getPrimaryAddress();
 
-	const uint64_t unlockTime = 0;
+    const uint64_t unlockTime = 0;
 
     return sendTransactionAdvanced(
         destinations, defaultMixin, fee, paymentID, {}, changeAddress, daemon,
@@ -261,7 +261,7 @@ std::tuple<Error, Crypto::Hash> sendTransactionAdvanced(
     std::string changeAddress,
     const std::shared_ptr<Nigel> daemon,
     const std::shared_ptr<SubWallets> subWallets,
-	const uint64_t unlockTime)
+    const uint64_t unlockTime)
 {
     /* Append the fee transaction, if a fee is being used */
     const auto [feeAmount, feeAddress] = daemon->nodeFee();
@@ -333,7 +333,8 @@ std::tuple<Error, Crypto::Hash> sendTransactionAdvanced(
     );
 
     TransactionResult txResult = makeTransaction(
-        mixin, daemon, ourInputs, paymentID, destinations, subWallets, unlockTime
+        mixin, daemon, ourInputs, paymentID, destinations, subWallets,
+        unlockTime
     );
 
     if (txResult.error)
@@ -435,37 +436,34 @@ void storeUnconfirmedIncomingInputs(
         txPublicKey, subWallets->getPrivateViewKey(), derivation
     );
 
-    for (size_t outputIndex = 0; outputIndex < keyOutputs.size(); outputIndex++)
+    uint64_t outputIndex = 0;
+
+    for (const auto output : keyOutputs)
     {
         Crypto::PublicKey spendKey;
 
         /* Not our output */
-        if (!Crypto::underive_public_key(
-            derivation, outputIndex, keyOutputs[outputIndex].key, spendKey))
-        {
-            continue;
-        }
+        Crypto::underive_public_key(derivation, outputIndex, output.key, spendKey);
 
         const auto spendKeys = subWallets->m_publicSpendKeys;
 
         /* See if the derived spend key is one of ours */
         const auto it = std::find(spendKeys.begin(), spendKeys.end(), spendKey);
 
-        /* Doesn't belong to us */
-        if (it == spendKeys.end())
+        if (it != spendKeys.end())
         {
-            continue;
+            Crypto::PublicKey ourSpendKey = *it;
+
+            WalletTypes::UnconfirmedInput input;
+
+            input.amount = keyOutputs[outputIndex].amount;
+            input.key = keyOutputs[outputIndex].key;
+            input.parentTransactionHash = txHash;
+
+            subWallets->storeUnconfirmedIncomingInput(input, ourSpendKey);
         }
 
-        Crypto::PublicKey ourSpendKey = *it;
-
-        WalletTypes::UnconfirmedInput input;
-
-        input.amount = keyOutputs[outputIndex].amount;
-        input.key = keyOutputs[outputIndex].key;
-        input.parentTransactionHash = txHash;
-
-        subWallets->storeUnconfirmedIncomingInput(input, ourSpendKey);
+        outputIndex++;
     }
 }
 
@@ -541,7 +539,7 @@ std::vector<WalletTypes::TransactionDestination> setupDestinations(
     }
 
     std::vector<WalletTypes::TransactionDestination> destinations;
-	//DL-TODO: UPDATE TO HANDLE DUSTFUND
+
     for (const auto [address, amount] : addressesAndAmounts)
     {
         /* Grab the public keys from the receiver address */
@@ -632,34 +630,34 @@ std::tuple<Error, std::vector<CryptoNote::RandomOuts>> getRingParticipants(
         }
     }
 
-	if (fakeOuts.size() != amounts.size())
-	{
-		return { NOT_ENOUGH_FAKE_OUTPUTS, fakeOuts };
-	}
+    if (fakeOuts.size() != amounts.size())
+    {
+        return {NOT_ENOUGH_FAKE_OUTPUTS, fakeOuts};
+    }
 
     for (auto fakeOut : fakeOuts)
     {
-		/* Do the same check as above here, again. The reason being that
-		   we just find the first set of outputs matching the amount above,
-		   and if we requests, say, outputs for the amount 100 twice, the
-		   first set might be sufficient, but the second are not.
+        /* Do the same check as above here, again. The reason being that
+           we just find the first set of outputs matching the amount above,
+           and if we requests, say, outputs for the amount 100 twice, the
+           first set might be sufficient, but the second are not.
+           
+           We could just check here instead of checking above, but then we
+           might hit the length message first. Checking this way gives more
+           informative errors. */
+        if (fakeOut.outs.size() < mixin)
+        {
+            std::stringstream error;
 
-		   We could just check here instead of checking above, but then we
-		   might hit the length message first. Checking this way gives more
-		   informative errors. */
-		if (fakeOut.outs.size() < mixin)
-		{
-			std::stringstream error;
+            error << "Failed to get enough matching outputs for amount "
+                  << fakeOut.amount << " (" << Utilities::formatAmount(fakeOut.amount)
+                  << "). Requested outputs: " << requestedOuts
+                  << ", found outputs: " << fakeOut.outs.size()
+                  << ". Further explanation here: "
+                  << "https://gist.github.com/zpalmtree/80b3e80463225bcfb8f8432043cb594c";
 
-			error << "Failed to get enough matching outputs for amount "
-				<< fakeOut.amount << " (" << Utilities::formatAmount(fakeOut.amount)
-				<< "). Requested outputs: " << requestedOuts
-				<< ", found outputs: " << fakeOut.outs.size()
-				<< ". Further explanation here: "
-				<< "https://gist.github.com/zpalmtree/80b3e80463225bcfb8f8432043cb594c";
-
-			return { Error(NOT_ENOUGH_FAKE_OUTPUTS, error.str()), fakeOuts };
-		}
+            return {Error(NOT_ENOUGH_FAKE_OUTPUTS, error.str()), fakeOuts};
+        }
 
         /* Sort the fake outputs by their indexes (don't want there to be an
            easy way to determine which output is the real one) */
@@ -699,7 +697,7 @@ std::tuple<Error, std::vector<WalletTypes::ObscuredInput>> prepareRingParticipan
     for (const auto walletAmount : sources)
     {
         WalletTypes::GlobalIndexKey realOutput {
-            walletAmount.input.globalOutputIndex,
+            walletAmount.input.globalOutputIndex.value(),
             walletAmount.input.key
         };
 
@@ -952,28 +950,28 @@ std::tuple<Error, CryptoNote::Transaction> generateRingSignatures(
         i++;
     }
 
-	i = 0;
+    i = 0;
 
-	for (const auto input : inputsAndFakes)
-	{
-		std::vector<Crypto::PublicKey> publicKeys;
+    for (const auto input: inputsAndFakes)
+    {
+        std::vector<Crypto::PublicKey> publicKeys;
 
-		for (const auto output : input.outputs)
-		{
-			publicKeys.push_back(output.key);
-		}
+        for (const auto output : input.outputs)
+        {
+            publicKeys.push_back(output.key);
+        }
 
-		if (!Crypto::crypto_ops::checkRingSignature(
-			txPrefixHash,
-			boost::get<CryptoNote::KeyInput>(tx.inputs[i]).keyImage,
-			publicKeys,
-			tx.signatures[i]))
-		{
-			return { FAILED_TO_CREATE_RING_SIGNATURE, tx };
-		}
+        if (!Crypto::crypto_ops::checkRingSignature(
+                txPrefixHash,
+                boost::get<CryptoNote::KeyInput>(tx.inputs[i]).keyImage,
+                publicKeys,
+                tx.signatures[i]))
+        {
+            return {FAILED_TO_CREATE_RING_SIGNATURE, tx};
+        }
 
-		i++;
-	}
+        i++;
+    }
 
     return {SUCCESS, tx};
 }
@@ -1054,7 +1052,7 @@ TransactionResult makeTransaction(
     const std::string paymentID,
     const std::vector<WalletTypes::TransactionDestination> destinations,
     const std::shared_ptr<SubWallets> subWallets,
-	const uint64_t unlockTime)
+    const uint64_t unlockTime)
 {
     /* Mix our inputs with fake ones from the network to hide who we are */
     const auto [mixinError, inputsAndFakes] = prepareRingParticipants(
