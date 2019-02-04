@@ -952,21 +952,21 @@ std::tuple<Error, uint16_t> ApiDispatcher::getStatus(
     Response &res,
     const nlohmann::json &body) const
 {
-    const WalletTypes::WalletStatus status = m_walletBackend->getStatus();
+	const WalletTypes::WalletStatus status = m_walletBackend->getStatus();
 
-    nlohmann::json j {
-        {"walletBlockCount", status.walletBlockCount},
-        {"localDaemonBlockCount", status.localDaemonBlockCount},
-        {"networkBlockCount", status.networkBlockCount},
-        {"peerCount", status.peerCount},
-        {"hashrate", status.lastKnownHashrate},
-        {"isViewWallet", m_walletBackend->isViewWallet(),
+	nlohmann::json j{
+		{"walletBlockCount", status.walletBlockCount},
+		{"localDaemonBlockCount", status.localDaemonBlockCount},
+		{"networkBlockCount", status.networkBlockCount},
+		{"peerCount", status.peerCount},
+		{"hashrate", status.lastKnownHashrate},
+		{"isViewWallet", m_walletBackend->isViewWallet()},
 		{"subWalletCount", m_walletBackend->getWalletCount()}
-    };
+	};
 
-    res.set_content(j.dump(4) + "\n", "application/json");
+	res.set_content(j.dump(4) + "\n", "application/json");
 
-    return {SUCCESS, 200};
+	return { SUCCESS, 200 };
 }
 
 std::tuple<Error, uint16_t> ApiDispatcher::getAddresses(
