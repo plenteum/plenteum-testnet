@@ -1,6 +1,5 @@
 // Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
-// Copyright (c) 2018-2019, The TurtleCoin Developers
-// Copyright (c) 2018-2019, The Plenteum Developers
+// Copyright (c) 2018, The TurtleCoin Developers
 // Copyright (c) 2018, The Karai Developers
 //
 // Please see the included LICENSE file for more information.
@@ -39,12 +38,6 @@
 #include <io.h>
 #else
 #include <unistd.h>
-#endif
-
-#ifdef _WIN32
-const char NATIVE_PATH_SEPARATOR = '\\';
-#else
-const char NATIVE_PATH_SEPARATOR = '/';
 #endif
 
 using Common::JsonValue;
@@ -117,7 +110,8 @@ JsonValue buildLoggerConfiguration(Level level, const std::string& logfile) {
 
 int main(int argc, char* argv[])
 {
-  DaemonConfiguration config = initConfiguration(argv[0]);
+  fs::path temp = fs::path(argv[0]).filename();
+  DaemonConfiguration config = initConfiguration(temp.string().c_str());
 
 #ifdef WIN32
   _CrtSetDbgFlag ( _CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF );
@@ -194,26 +188,26 @@ int main(int argc, char* argv[])
 
   try
   {
-	  std::string cwdPath = fs::current_path().string() + NATIVE_PATH_SEPARATOR;
-	  auto modulePath = Common::NativePathToGeneric(cwdPath + argv[0]);
-	  auto cfgLogFile = config.logFile;
+    fs::path cwdPath = fs::current_path();
+    auto modulePath = cwdPath / temp;
+    auto cfgLogFile = fs::path(config.logFile);
 
     if (cfgLogFile.empty()) {
-      cfgLogFile = Common::ReplaceExtenstion(modulePath, ".log");
+      cfgLogFile = modulePath.replace_extension(".log");
     } else {
-      if (!Common::HasParentPath(cfgLogFile)) {
-  cfgLogFile = Common::CombinePath(Common::GetPathDirectory(modulePath), cfgLogFile);
+      if (!cfgLogFile.has_parent_path()) {
+        cfgLogFile = modulePath.parent_path() / cfgLogFile;
       }
     }
 
     Level cfgLogLevel = static_cast<Level>(static_cast<int>(Logging::ERROR) + config.logLevel);
 
     // configure logging
-    logManager->configure(buildLoggerConfiguration(cfgLogLevel, cfgLogFile));
+    logManager->configure(buildLoggerConfiguration(cfgLogLevel, cfgLogFile.string()));
 
     logger(INFO, BRIGHT_GREEN) << getProjectCLIHeader() << std::endl;
 
-	logger(INFO) << "Program Working Directory: " << Common::NativePathToGeneric(cwdPath + "");
+    logger(INFO) << "Program Working Directory: " << cwdPath;
 
     //create objects and link them
     CryptoNote::CurrencyBuilder currencyBuilder(logManager);
