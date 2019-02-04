@@ -1,5 +1,4 @@
 // Copyright (c) 2018, The TurtleCoin Developers
-// Copyright (c) 2019, The Plenteum Developers
 // 
 // Please see the included LICENSE file for more information.
 
@@ -13,13 +12,18 @@
 #include "rapidjson/writer.h"
 
 #include <unordered_map>
+#include <optional>
 
 namespace WalletTypes
 {
     struct KeyOutput
     {
         Crypto::PublicKey key;
+
         uint64_t amount;
+
+        /* Daemon doesn't supply this, blockchain cache api does. */
+        std::optional<uint64_t> globalOutputIndex;
     };
 
     /* A coinbase transaction (i.e., a miner reward, there is one of these in
@@ -97,7 +101,7 @@ namespace WalletTypes
         uint64_t transactionIndex;
 
         /* The index of this output in the 'DB' */
-        uint64_t globalOutputIndex;
+        std::optional<uint64_t> globalOutputIndex;
 
         /* The transaction key we took from the key outputs */
         Crypto::PublicKey key;
@@ -130,28 +134,28 @@ namespace WalletTypes
             keyImage.toJSON(writer);
 
             writer.Key("amount");
-            writer.Uint(amount);
+            writer.Uint64(amount);
 
             writer.Key("blockHeight");
-            writer.Uint(blockHeight);
+            writer.Uint64(blockHeight);
 
             writer.Key("transactionPublicKey");
             transactionPublicKey.toJSON(writer);
 
             writer.Key("transactionIndex");
-            writer.Uint(transactionIndex);
+            writer.Uint64(transactionIndex);
 
             writer.Key("globalOutputIndex");
-            writer.Uint(globalOutputIndex);
+            writer.Uint64(globalOutputIndex.value_or(0));
 
             writer.Key("key");
             key.toJSON(writer);
 
             writer.Key("spendHeight");
-            writer.Uint(spendHeight);
+            writer.Uint64(spendHeight);
 
             writer.Key("unlockTime");
-            writer.Uint(unlockTime);
+            writer.Uint64(unlockTime);
 
             writer.Key("parentTransactionHash");
             parentTransactionHash.toJSON(writer);
@@ -304,7 +308,7 @@ namespace WalletTypes
 
             /* A map of public keys to amounts, since one transaction can go to
                multiple addresses. These can be positive or negative, for example
-               one address might have sent 10,000 PLE (-10000) to two recipients
+               one address might have sent 10,000 TRTL (-10000) to two recipients
                (+5000), (+5000) 
                
                All the public keys in this map, are ones that the wallet container
@@ -347,7 +351,7 @@ namespace WalletTypes
                     publicKey.toJSON(writer);
 
                     writer.Key("amount");
-                    writer.Int(amount);
+                    writer.Int64(amount);
 
                     writer.EndObject();
                 }
@@ -357,19 +361,19 @@ namespace WalletTypes
                 hash.toJSON(writer);
 
                 writer.Key("fee");
-                writer.Uint(fee);
+                writer.Uint64(fee);
 
                 writer.Key("blockHeight");
-                writer.Uint(blockHeight);
+                writer.Uint64(blockHeight);
 
                 writer.Key("timestamp");
-                writer.Uint(timestamp);
+                writer.Uint64(timestamp);
 
                 writer.Key("paymentID");
                 writer.String(paymentID);
 
                 writer.Key("unlockTime");
-                writer.Uint(unlockTime);
+                writer.Uint64(unlockTime);
 
                 writer.Key("isCoinbaseTransaction");
                 writer.Bool(isCoinbaseTransaction);
@@ -436,7 +440,7 @@ namespace WalletTypes
             writer.StartObject();
 
             writer.Key("amount");
-            writer.Uint(amount);
+            writer.Uint64(amount);
 
             writer.Key("key");
             key.toJSON(writer);
