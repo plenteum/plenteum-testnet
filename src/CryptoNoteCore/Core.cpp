@@ -1608,7 +1608,7 @@ bool Core::getBlockTemplate(BlockTemplate& b, const AccountPublicAddress& adr, c
 
   size_t transactionsSize;
   uint64_t fee;
-  fillBlockTemplate(b, medianSize, currency.maxBlockCumulativeSize(height), transactionsSize, fee);
+  fillBlockTemplate(b, medianSize, currency.maxBlockCumulativeSize(height), height, transactionsSize, fee);
 
   /*
      two-phase miner transaction generation: we don't know exact block size until we prepare block, but we don't know
@@ -1800,6 +1800,16 @@ auto error = validateSemantic(transaction, fee, blockIndex);
 std::error_code Core::validateSemantic(const Transaction& transaction, uint64_t& fee, uint32_t blockIndex) {
   if (transaction.inputs.empty()) {
     return error::TransactionValidationError::EMPTY_INPUTS;
+  }
+
+  /* Small buffer until enforcing - helps clear out tx pool with old, previously
+	 valid transactions */
+  if (blockIndex >= CryptoNote::parameters::MAX_EXTRA_SIZE_V2_HEIGHT + CryptoNote::parameters::CRYPTONOTE_MINED_MONEY_UNLOCK_WINDOW)
+  {
+	  if (transaction.extra.size() >= CryptoNote::parameters::MAX_EXTRA_SIZE_V2)
+	  {
+		  return error::TransactionValidationError::EXTRA_TOO_LARGE;
+	  }
   }
 
   uint64_t summaryOutputAmount = 0;
@@ -2355,35 +2365,90 @@ size_t Core::calculateCumulativeBlocksizeLimit(uint32_t height) const {
   return median * 2;
 }
 
-void Core::fillBlockTemplate(BlockTemplate& block, size_t medianSize, size_t maxCumulativeSize,
-                             size_t& transactionsSize, uint64_t& fee) const {
-  transactionsSize = 0;
-  fee = 0;
+bool Core::validateBlockTemplateTransaction(
+	const CachedTransaction &cachedTransaction,
+	const uint64_t blockHeight) const
+{
+	const auto &transaction = cachedTransaction.getTransaction();
 
-  size_t maxTotalSize = (125 * medianSize) / 100;
-  maxTotalSize = std::min(maxTotalSize, maxCumulativeSize) - currency.minerTxBlobReservedSize();
+	if (blockHeight >= CryptoNote::parameters::MAX_EXTRA_SIZE_V2_HEIGHT)
+	{
+		if (transaction.extra.size() >= CryptoNote::parameters::MAX_EXTRA_SIZE_V2)
+		{
+			logger(Logging::TRACE) << "Not adding transaction "
+				<< cachedTransaction.getTransactionHash()
+				<< " to block template, extra too large.";
+			return false;
+		}
+	}
 
-  TransactionSpentInputsChecker spentInputsChecker;
+	auto[success, error] = Mixins::validate({ cachedTransaction }, blockHeight);
 
-  //no need to treat fusions any differently to standard transactions
-  std::vector<CachedTransaction> poolTransactions = transactionPool->getPoolTransactions();
- 
-  for (const auto& cachedTransaction : poolTransactions) {
-    size_t blockSizeLimit = maxTotalSize;
+	if (!success)
+	{
+		logger(Logging::TRACE) << "Not adding transaction "
+			<< cachedTransaction.getTransactionHash()
+			<< " to block template, " << error;
+		return false;
+	}
 
-    if (blockSizeLimit < transactionsSize + cachedTransaction.getTransactionBinaryArray().size()) {
-      continue;
-    }
+	return true;
+}
 
-    if (!spentInputsChecker.haveSpentInputs(cachedTransaction.getTransaction())) {
-      transactionsSize += cachedTransaction.getTransactionBinaryArray().size();
-      fee += cachedTransaction.getTransactionFee();
-      block.transactionHashes.emplace_back(cachedTransaction.getTransactionHash());
-      logger(Logging::TRACE) << "Transaction " << cachedTransaction.getTransactionHash() << " included to block template";
-    } else {
-      logger(Logging::TRACE) << "Transaction " << cachedTransaction.getTransactionHash() << " has failed to include to block template";
-    }
-  }
+void Core::fillBlockTemplate(
+	BlockTemplate& block,
+	const size_t medianSize,
+	const size_t maxCumulativeSize,
+	const uint64_t height,
+	size_t& transactionsSize,
+	uint64_t& fee) const {
+
+	transactionsSize = 0;
+	fee = 0;
+
+	size_t maxTotalSize = (125 * medianSize) / 100;
+	maxTotalSize = std::min(maxTotalSize, maxCumulativeSize) - currency.minerTxBlobReservedSize();
+	TransactionSpentInputsChecker spentInputsChecker;
+	std::vector<CachedTransaction> poolTransactions = transactionPool->getPoolTransactions();
+	/*for (auto it = poolTransactions.rbegin(); it != poolTransactions.rend() && it->getTransactionFee() == 0; ++it) {
+		const CachedTransaction& transaction = *it;
+		auto transactionBlobSize = transaction.getTransactionBinaryArray().size();
+		if (currency.fusionTxMaxSize() < transactionsSize + transactionBlobSize) {
+			continue;
+		}
+
+		if (!validateBlockTemplateTransaction(transaction, height))
+		{
+			continue;
+		}
+
+		if (!spentInputsChecker.haveSpentInputs(transaction.getTransaction())) {
+			block.transactionHashes.emplace_back(transaction.getTransactionHash());
+			transactionsSize += transactionBlobSize;
+			logger(Logging::TRACE) << "Fusion transaction " << transaction.getTransactionHash() << " included to block template";
+		}
+	}*/
+	for (const auto& cachedTransaction : poolTransactions) {
+		size_t blockSizeLimit = (cachedTransaction.getTransactionFee() == 0) ? medianSize : maxTotalSize;
+		if (blockSizeLimit < transactionsSize + cachedTransaction.getTransactionBinaryArray().size()) {
+			continue;
+		}
+
+		if (!validateBlockTemplateTransaction(cachedTransaction, height))
+		{
+			continue;
+		}
+
+		if (!spentInputsChecker.haveSpentInputs(cachedTransaction.getTransaction())) {
+			transactionsSize += cachedTransaction.getTransactionBinaryArray().size();
+			fee += cachedTransaction.getTransactionFee();
+			block.transactionHashes.emplace_back(cachedTransaction.getTransactionHash());
+			logger(Logging::TRACE) << "Transaction " << cachedTransaction.getTransactionHash() << " included to block template";
+		}
+		else {
+			logger(Logging::TRACE) << "Transaction " << cachedTransaction.getTransactionHash() << " is failed to include to block template";
+		}
+	}
 }
 
 void Core::deleteAlternativeChains() {
