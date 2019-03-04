@@ -124,6 +124,10 @@ namespace CryptoNote {
 		const uint64_t MAX_EXTRA_SIZE_V2 = 1024;
 		const uint64_t MAX_EXTRA_SIZE_V2_HEIGHT = 1400; //height at which tx extra is limited to 1024 (testnet height of 1400)
 
+		/* For new projects forked from this code base, this value should be
+			changed to 0 to prevent a possible transaction bloat exploit */
+		const uint64_t TRANSACTION_SIGNATURE_COUNT_VALIDATION_HEIGHT = 1400; //TESTNET_HEIGHT
+
 		const uint64_t CRYPTONOTE_LOCKED_TX_ALLOWED_DELTA_BLOCKS = 1;
 		const uint64_t CRYPTONOTE_LOCKED_TX_ALLOWED_DELTA_SECONDS = DIFFICULTY_TARGET * CRYPTONOTE_LOCKED_TX_ALLOWED_DELTA_BLOCKS;
 
@@ -159,11 +163,12 @@ namespace CryptoNote {
 			200, //first fork to introduce DUST fund
 			250, //fix tx sizes issue
 			1150, // CN Turtle
+			1400, //invalid signature count height
 			5000 //difficulty update and web wallet direct connect
 		};
 
 		/* MAKE SURE TO UPDATE THIS VALUE WITH EVERY MAJOR RELEASE BEFORE A FORK */
-		const uint64_t SOFTWARE_SUPPORTED_FORK_INDEX = 6;
+		const uint64_t SOFTWARE_SUPPORTED_FORK_INDEX = 7;
 
 		const uint64_t FORK_HEIGHTS_SIZE = sizeof(FORK_HEIGHTS) / sizeof(*FORK_HEIGHTS);
 
