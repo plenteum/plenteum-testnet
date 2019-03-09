@@ -31,19 +31,12 @@ public:
 
   size_t timestampCheckWindow(uint32_t blockHeight) const
   {
-     return m_timestampCheckWindow;
+	  return m_timestampCheckWindow;
   }
 
   uint64_t blockFutureTimeLimit(uint32_t blockHeight) const
   {
-	  if (blockHeight >= CryptoNote::parameters::LWMA_2_DIFFICULTY_BLOCK_INDEX)
-	  {
-		  return CryptoNote::parameters::CRYPTONOTE_BLOCK_FUTURE_TIME_LIMIT;
-	  }
-	  else
-	  {
-		  return m_blockFutureTimeLimit;
-	  }
+	  return m_blockFutureTimeLimit;
   }
 
   uint64_t moneySupply() const { return m_moneySupply; }

@@ -77,7 +77,7 @@ uint64_t nextDifficultyV6(std::vector<uint64_t> timestamps, std::vector<uint64_t
 uint64_t nextDifficultyV5(std::vector<uint64_t> timestamps, std::vector<uint64_t> cumulativeDifficulties)
 {
     int64_t T = CryptoNote::parameters::DIFFICULTY_TARGET;
-    int64_t N = CryptoNote::parameters::DIFFICULTY_WINDOW_V2;
+    int64_t N = CryptoNote::parameters::DIFFICULTY_WINDOW;
     int64_t L(0), ST, sum_3_ST(0), next_D, prev_D;
 
     /* If we are starting up, returning a difficulty guess. If you are a
@@ -122,7 +122,7 @@ uint64_t nextDifficultyV5(std::vector<uint64_t> timestamps, std::vector<uint64_t
 uint64_t nextDifficultyV4(std::vector<uint64_t> timestamps, std::vector<uint64_t> cumulativeDifficulties)
 {
 	int64_t T = CryptoNote::parameters::DIFFICULTY_TARGET;
-	int64_t N = CryptoNote::parameters::DIFFICULTY_WINDOW;
+	int64_t N = CryptoNote::parameters::DIFFICULTY_WINDOW_V1;
 	int64_t FTL = CryptoNote::parameters::CRYPTONOTE_BLOCK_FUTURE_TIME_LIMIT;
 	int64_t L(0), ST, sum_3_ST(0), next_D, prev_D;
 

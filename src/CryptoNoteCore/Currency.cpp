@@ -104,19 +104,35 @@ bool Currency::generateGenesisBlock() {
 }
 
 size_t Currency::difficultyWindowByBlockVersion(uint8_t blockMajorVersion) const {
-    return m_difficultyWindow;
+	if (blockMajorVersion >= BLOCK_MAJOR_VERSION_6) {
+		return m_difficultyWindow; //TODO: check setting of this param
+	}
+	else {
+		return CryptoNote::parameters::DIFFICULTY_WINDOW_V1;
+	}
 }
 
 size_t Currency::difficultyLagByBlockVersion(uint8_t blockMajorVersion) const {
-    return m_difficultyLag;
+	if (blockMajorVersion >= BLOCK_MAJOR_VERSION_6) {
+		return m_difficultyLag; //TODO: check setting of this var
+	}
+	else {
+		return CryptoNote::parameters::DIFFICULTY_LAG_V1;
+	}
 }
 
 size_t Currency::difficultyCutByBlockVersion(uint8_t blockMajorVersion) const {
-    return m_difficultyCut;
+	if (blockMajorVersion >= BLOCK_MAJOR_VERSION_6) {
+		return m_difficultyCut; //TODO: check setting of this var
+	}
+	else {
+		return CryptoNote::parameters::DIFFICULTY_CUT_V1;
+	}
 }
 
 size_t Currency::difficultyBlocksCountByBlockVersion(uint8_t blockMajorVersion, uint32_t height) const
 {
+
     return difficultyWindowByBlockVersion(blockMajorVersion) + difficultyLagByBlockVersion(blockMajorVersion);
 }
 
@@ -140,10 +156,10 @@ uint32_t Currency::upgradeHeight(uint8_t majorVersion) const {
 	  return m_upgradeHeightV6; //height of fix for tx sizes
   }
   else if (majorVersion == BLOCK_MAJOR_VERSION_5) {
-	  return m_upgradeHeightV7;
+	  return m_upgradeHeightV7; //cn turtle update
   }
   else if (majorVersion == BLOCK_MAJOR_VERSION_6) {
-	  return m_upgradeHeightV8;
+	  return m_upgradeHeightV8; //soft shell & Diff update
   }
   else {
     return static_cast<uint32_t>(-1);
@@ -425,7 +441,7 @@ uint64_t Currency::getNextDifficulty(uint8_t version, uint32_t blockIndex, std::
 	{
 		return nextDifficultyV4(timestamps, cumulativeDifficulties);
 	}
-	//current default difficulty is v4, we will likely skip over v% and go straight to V6
+	//current default difficulty is v5
 	return nextDifficultyV5(timestamps, cumulativeDifficulties);
 }
 
