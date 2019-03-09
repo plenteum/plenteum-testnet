@@ -38,6 +38,7 @@ namespace CryptoNote {
 
 		const uint64_t LWMA_2_DIFFICULTY_BLOCK_INDEX = 2;
 		const uint64_t LWMA_2_DIFFICULTY_BLOCK_INDEX_V2 = 3;
+		const uint64_t LWMA_2_DIFFICULTY_BLOCK_INDEX_V3 = 1300;
 
 
 		const unsigned EMISSION_SPEED_FACTOR = 22;
@@ -106,10 +107,11 @@ namespace CryptoNote {
 
 		const uint64_t EXPECTED_NUMBER_OF_BLOCKS_PER_DAY = 24 * 60 * 60 / DIFFICULTY_TARGET;
 		const size_t   DIFFICULTY_WINDOW = 720;
+		const size_t   DIFFICULTY_WINDOW_V2 = 60;
 		const size_t   DIFFICULTY_CUT = 60;  // timestamps to cut after sorting
 		const size_t   DIFFICULTY_LAG = 15;  // !!!
 		const uint64_t DIFFICULTY_BLOCKS_COUNT = DIFFICULTY_WINDOW + 1;
-		static_assert(2 * DIFFICULTY_CUT <= DIFFICULTY_WINDOW - 2, "Bad DIFFICULTY_WINDOW or DIFFICULTY_CUT");
+		//static_assert(2 * DIFFICULTY_CUT <= DIFFICULTY_WINDOW - 2, "Bad DIFFICULTY_WINDOW or DIFFICULTY_CUT");
 
 		const size_t   MAX_BLOCK_SIZE_INITIAL = 100000;
 		const uint64_t MAX_BLOCK_SIZE_GROWTH_SPEED_NUMERATOR = 100 * 1024;

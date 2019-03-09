@@ -421,8 +421,12 @@ uint64_t Currency::getNextDifficulty(uint8_t version, uint32_t blockIndex, std::
 	{
 		return nextDifficultyV3(timestamps, cumulativeDifficulties);
 	}
+	else if (blockIndex < CryptoNote::parameters::LWMA_2_DIFFICULTY_BLOCK_INDEX_V3)
+	{
+		return nextDifficultyV4(timestamps, cumulativeDifficulties);
+	}
 	//current default difficulty is v4, we will likely skip over v% and go straight to V6
-	return nextDifficultyV4(timestamps, cumulativeDifficulties);
+	return nextDifficultyV5(timestamps, cumulativeDifficulties);
 }
 
 uint64_t Currency::nextDifficulty(uint8_t version, uint32_t blockIndex, std::vector<uint64_t> timestamps,
