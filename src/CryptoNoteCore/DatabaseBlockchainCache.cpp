@@ -1138,9 +1138,9 @@ uint64_t DatabaseBlockchainCache::getDifficultyForNextBlock() const {
 uint64_t DatabaseBlockchainCache::getDifficultyForNextBlock(uint32_t blockIndex) const {
   assert(blockIndex <= getTopBlockIndex());
   uint8_t nextBlockMajorVersion = getBlockMajorVersionForHeight(blockIndex+1);
-  auto timestamps = getLastTimestamps(currency.difficultyBlocksCountByBlockVersion(nextBlockMajorVersion, blockIndex), blockIndex, UseGenesis{false});
+  auto timestamps = getLastTimestamps(currency.difficultyBlocksCountByBlockVersion(nextBlockMajorVersion), blockIndex, UseGenesis{false});
   auto commulativeDifficulties =
-      getLastCumulativeDifficulties(currency.difficultyBlocksCountByBlockVersion(nextBlockMajorVersion, blockIndex), blockIndex, UseGenesis{false});
+      getLastCumulativeDifficulties(currency.difficultyBlocksCountByBlockVersion(nextBlockMajorVersion), blockIndex, UseGenesis{false});
   return currency.getNextDifficulty(nextBlockMajorVersion, blockIndex, std::move(timestamps), std::move(commulativeDifficulties));
 }
 

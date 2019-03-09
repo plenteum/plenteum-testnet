@@ -25,6 +25,7 @@ namespace CryptoNote {
 		const uint64_t CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX = 18181; // PLe
 		const uint32_t CRYPTONOTE_MINED_MONEY_UNLOCK_WINDOW = 20;
 		const uint64_t CRYPTONOTE_BLOCK_FUTURE_TIME_LIMIT = 3 * DIFFICULTY_TARGET;
+		const uint64_t CRYPTONOTE_BLOCK_FUTURE_TIME_LIMIT_V2 = 6 * DIFFICULTY_TARGET;
 
 		const size_t   BLOCKCHAIN_TIMESTAMP_CHECK_WINDOW = 11;
 
@@ -104,14 +105,14 @@ namespace CryptoNote {
 		const uint32_t FUSION_DUST_THRESHOLD_HEIGHT_V2 = 200;
 
 		const uint64_t EXPECTED_NUMBER_OF_BLOCKS_PER_DAY = 24 * 60 * 60 / DIFFICULTY_TARGET;
-		const size_t   DIFFICULTY_WINDOW = 20;
+		const size_t   DIFFICULTY_WINDOW = 60;
 		const size_t   DIFFICULTY_WINDOW_V1 = 720;
 		const size_t   DIFFICULTY_CUT = 0;  // timestamps to cut after sorting
 		const size_t   DIFFICULTY_CUT_V1 = 60;  // timestamps to cut after sorting
 		const size_t   DIFFICULTY_LAG = 0;  // !!!
 		const size_t   DIFFICULTY_LAG_V1 = 15;  // !!!
 		const uint64_t DIFFICULTY_BLOCKS_COUNT = DIFFICULTY_WINDOW + 1;
-		//static_assert(2 * DIFFICULTY_CUT <= DIFFICULTY_WINDOW - 2, "Bad DIFFICULTY_WINDOW or DIFFICULTY_CUT");
+		static_assert(2 * DIFFICULTY_CUT <= DIFFICULTY_WINDOW - 2, "Bad DIFFICULTY_WINDOW or DIFFICULTY_CUT");
 
 		const size_t   MAX_BLOCK_SIZE_INITIAL = 100000;
 		const uint64_t MAX_BLOCK_SIZE_GROWTH_SPEED_NUMERATOR = 100 * 1024;

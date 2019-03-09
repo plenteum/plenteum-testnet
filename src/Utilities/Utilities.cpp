@@ -188,7 +188,8 @@ uint64_t getCurrentTimestampAdjusted()
     /* Take the amount of time a block can potentially be in the past/future */
     std::initializer_list<uint64_t> limits =
     {
-        CryptoNote::parameters::CRYPTONOTE_BLOCK_FUTURE_TIME_LIMIT
+		CryptoNote::parameters::CRYPTONOTE_BLOCK_FUTURE_TIME_LIMIT,
+		CryptoNote::parameters::CRYPTONOTE_BLOCK_FUTURE_TIME_LIMIT_V2
     };
 
     /* Get the largest adjustment possible */

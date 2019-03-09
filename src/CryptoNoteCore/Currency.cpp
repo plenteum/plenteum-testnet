@@ -130,7 +130,7 @@ size_t Currency::difficultyCutByBlockVersion(uint8_t blockMajorVersion) const {
 	}
 }
 
-size_t Currency::difficultyBlocksCountByBlockVersion(uint8_t blockMajorVersion, uint32_t height) const
+size_t Currency::difficultyBlocksCountByBlockVersion(uint8_t blockMajorVersion) const
 {
 
     return difficultyWindowByBlockVersion(blockMajorVersion) + difficultyLagByBlockVersion(blockMajorVersion);
@@ -517,7 +517,7 @@ std::vector<uint64_t> cumulativeDifficulties_o(cumulativeDifficulties);
   DIFFICULTY_LAG=0
   DIFFICULTY_WINDOW=17
 */
-    c_difficultyWindow = 17;
+    c_difficultyWindow = 20;
     c_difficultyCut = 0;
 
     assert(c_difficultyWindow >= 2);

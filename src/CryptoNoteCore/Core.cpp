@@ -927,7 +927,7 @@ uint64_t Core::getDifficultyForNextBlock() const {
 
   uint8_t nextBlockMajorVersion = getBlockMajorVersionForHeight(topBlockIndex);
 
-  size_t blocksCount = std::min(static_cast<size_t>(topBlockIndex), currency.difficultyBlocksCountByBlockVersion(nextBlockMajorVersion, topBlockIndex));
+  size_t blocksCount = std::min(static_cast<size_t>(topBlockIndex), currency.difficultyBlocksCountByBlockVersion(nextBlockMajorVersion));
 
   auto timestamps = mainChain->getLastTimestamps(blocksCount);
   auto difficulties = mainChain->getLastCumulativeDifficulties(blocksCount);
