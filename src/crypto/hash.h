@@ -152,14 +152,10 @@ namespace Crypto {
     }
 
     uint32_t scratchpad = CN_SOFT_SHELL_MEMORY + (static_cast<uint32_t>(offset) * CN_SOFT_SHELL_PAD_MULTIPLIER);
-	scratchpad = (static_cast<uint64_t>(scratchpad / 64)) * 64;
-	if ((scratchpad / 64) % 2 != 0) //if the scratchpad divided by 64 is not an even number, then make it an even number that is divisible by 64
-	{
-		scratchpad -= 64; //simply subtract 64 which will make the scratchpad divided by 64 result an even number
-	}
+	scratchpad = (static_cast<uint64_t>(scratchpad / 128)) * 128;
     uint32_t iterations = CN_SOFT_SHELL_ITER + (static_cast<uint32_t>(offset) * CN_SOFT_SHELL_ITER_MULTIPLIER);
     uint32_t pagesize = scratchpad;
-
+	
     cn_slow_hash(data, length, reinterpret_cast<char *>(&hash), 1, 0, 0, pagesize, scratchpad, iterations);
   }
 
@@ -171,11 +167,7 @@ namespace Crypto {
     }
 
     uint32_t scratchpad = CN_SOFT_SHELL_MEMORY + (static_cast<uint32_t>(offset) * CN_SOFT_SHELL_PAD_MULTIPLIER);
-	scratchpad = (static_cast<uint64_t>(scratchpad / 64)) * 64;
-	if ((scratchpad / 64) % 2 != 0) //if the scratchpad divided by 64 is not an even number, then make it an even number that is divisible by 64
-	{
-		scratchpad -= 64; //simply subtract 64 which will make the scratchpad divided by 64 result an even number
-	}
+	scratchpad = (static_cast<uint64_t>(scratchpad / 128)) * 128;
     uint32_t iterations = CN_SOFT_SHELL_ITER + (static_cast<uint32_t>(offset) * CN_SOFT_SHELL_ITER_MULTIPLIER);
     uint32_t pagesize = scratchpad;
 
@@ -190,14 +182,9 @@ namespace Crypto {
     }
 
     uint32_t scratchpad = CN_SOFT_SHELL_MEMORY + (static_cast<uint32_t>(offset) * CN_SOFT_SHELL_PAD_MULTIPLIER);
-	scratchpad = (static_cast<uint64_t>(scratchpad / 64)) * 64;
-	if ((scratchpad / 64) % 2 != 0) //if the scratchpad divided by 64 is not an even number, then make it an even number that is divisible by 64
-	{
-		scratchpad -= 64; //simply subtract 64 which will make the scratchpad divided by 64 result an even number
-	}
+	scratchpad = (static_cast<uint64_t>(scratchpad / 128)) * 128;
     uint32_t iterations = CN_SOFT_SHELL_ITER + (static_cast<uint32_t>(offset) * CN_SOFT_SHELL_ITER_MULTIPLIER);
     uint32_t pagesize = scratchpad;
-
     cn_slow_hash(data, length, reinterpret_cast<char *>(&hash), 1, 2, 0, pagesize, scratchpad, iterations);
   }
 
